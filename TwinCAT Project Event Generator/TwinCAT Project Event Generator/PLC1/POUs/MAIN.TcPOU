@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{8e279f0e-7f0a-4414-b3f0-94b367b48d58}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	Msg		:ARRAY[1..5] OF FB_TcMessage;
+	Alarm	:ARRAY[1..5] OF FB_TcAlarm;
+	
+	i			:INT;
+	Init		:BOOL:=TRUE;
+	RaiseSend 	:BOOL:=TRUE;
+	Clear		:BOOL:=TRUE;
+	Confirm		:BOOL:=TRUE;
+	Cnt			:UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF Init THEN
+	Init:=FALSE;
+		Msg[1].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event1);
+		Msg[2].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event2);
+		Msg[3].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event3);
+		Msg[4].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event4);
+		Msg[5].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event5);
+		
+		
+		Alarm[1].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event1,bWithConfirmation:=TRUE);
+		Alarm[2].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event2,bWithConfirmation:=TRUE);
+		Alarm[3].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event3,bWithConfirmation:=TRUE);
+		Alarm[4].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event4,bWithConfirmation:=TRUE);
+		Alarm[5].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event5,bWithConfirmation:=TRUE);		
+END_IF
+
+
+IF RaiseSend THEN
+	RaiseSend:=FALSE;
+	Cnt:=Cnt+1;
+	FOR i:=1 TO 5 DO
+		Msg[i].ipArguments.Clear().AddUDInt(Cnt);
+		Msg[i].Send();
+		
+		Alarm[i].ipArguments.Clear().AddUDInt(Cnt);
+		Alarm[i].Raise();
+	END_FOR
+END_IF
+
+
+IF Confirm THEN
+	Confirm:=FALSE;
+	FOR i:=1 TO 5 DO
+		Alarm[i].Confirm();
+	END_FOR
+END_IF
+
+
+IF Clear THEN
+	Clear:=FALSE;
+	FOR i:=1 TO 5 DO
+		Alarm[i].Clear();
+	END_FOR
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

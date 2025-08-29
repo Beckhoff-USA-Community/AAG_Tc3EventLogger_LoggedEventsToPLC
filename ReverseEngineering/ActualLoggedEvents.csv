@@ -1,0 +1,12 @@
+Alarm State                	 Severity Level	 Event Class Name  	 Event Id	 Unique Id	 Event Text	 Source Name	 Time Raised         	 Time Cleared        	 Time Confirmed      	 Localized Source Name
+Inactive(Cleared,Confirmed)	 Critical      	 Logged Events Test	        5	        10	 Event5: 1 	 MAIN       	 8/28/2025 7:49:07 PM	 8/28/2025 8:20:49 PM	 8/28/2025 7:49:07 PM	 
+<message>                  	 Critical      	 Logged Events Test	        5	         9	 Event5: 1 	 MAIN       	 8/28/2025 7:49:07 PM	                     	                     	 
+Inactive(Cleared,Confirmed)	 Error         	 Logged Events Test	        4	         8	 Event4: 1 	 MAIN       	 8/28/2025 7:49:07 PM	 8/28/2025 8:20:49 PM	 8/28/2025 7:49:07 PM	 
+<message>                  	 Error         	 Logged Events Test	        4	         7	 Event4: 1 	 MAIN       	 8/28/2025 7:49:07 PM	                     	                     	 
+Inactive(Cleared,Confirmed)	 Warning       	 Logged Events Test	        3	         6	 Event3: 1 	 MAIN       	 8/28/2025 7:49:07 PM	 8/28/2025 8:20:49 PM	 8/28/2025 7:49:07 PM	 
+<message>                  	 Warning       	 Logged Events Test	        3	         5	 Event3: 1 	 MAIN       	 8/28/2025 7:49:07 PM	                     	                     	 
+Inactive(Cleared,Confirmed)	 Info          	 Logged Events Test	        2	         4	 Event2: 1 	 MAIN       	 8/28/2025 7:49:07 PM	 8/28/2025 8:20:49 PM	 8/28/2025 7:49:07 PM	 
+<message>                  	 Info          	 Logged Events Test	        2	         3	 Event2: 1 	 MAIN       	 8/28/2025 7:49:07 PM	                     	                     	 
+Inactive(Cleared,Confirmed)	 Verbose       	 Logged Events Test	        1	         2	 Event1: 1 	 MAIN       	 8/28/2025 7:49:07 PM	 8/28/2025 8:20:49 PM	 8/28/2025 7:49:07 PM	 
+<message>                  	 Verbose       	 Logged Events Test	        1	         1	 Event1: 1 	 MAIN       	 8/28/2025 7:49:07 PM	                     	                     	 
+

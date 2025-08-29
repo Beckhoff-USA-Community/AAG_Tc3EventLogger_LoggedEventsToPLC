@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.18">
+	<DataTypes>
+		<DataType>
+			<Name GUID="{5819B654-ACC7-4328-A54F-A5886769F484}" PersistentType="true">LoggedEventsTest</Name>
+			<DisplayName TxtId=""><![CDATA[Logged Events Test]]></DisplayName>
+			<EventId>
+				<Name Id="1">Event1</Name>
+				<DisplayName TxtId=""><![CDATA[Event1: {0}]]></DisplayName>
+				<Severity>Verbose</Severity>
+			</EventId>
+			<EventId>
+				<Name Id="2">Event2</Name>
+				<DisplayName TxtId=""><![CDATA[Event2: {0}]]></DisplayName>
+				<Severity>Info</Severity>
+			</EventId>
+			<EventId>
+				<Name Id="3">Event3</Name>
+				<DisplayName TxtId=""><![CDATA[Event3: {0}]]></DisplayName>
+				<Severity>Warning</Severity>
+			</EventId>
+			<EventId>
+				<Name Id="4">Event4</Name>
+				<DisplayName TxtId=""><![CDATA[Event4: {0}]]></DisplayName>
+				<Severity>Error</Severity>
+			</EventId>
+			<EventId>
+				<Name Id="5">Event5</Name>
+				<DisplayName TxtId=""><![CDATA[Event5: {0}]]></DisplayName>
+				<Severity>Critical</Severity>
+			</EventId>
+			<Hides>
+				<Hide GUID="{CBCBD749-ED1C-4C4B-BA93-8BF3D32A7B87}"/>
+				<Hide GUID="{A2CF6FC8-5F9C-43EC-8AA4-BF36A838188B}"/>
+				<Hide GUID="{A334DA5B-DC39-4B89-945B-B5DB5C49C9F1}"/>
+				<Hide GUID="{31FB291C-38E1-4A4E-9653-63DDD13EF01D}"/>
+				<Hide GUID="{CF450AA5-2D22-4EF3-8C4A-28D5F58B9B1D}"/>
+			</Hides>
+		</DataType>
+	</DataTypes>
+	<Project ProjectGUID="{AF710953-CA2D-41B4-9EFE-9AC0C3F0DDA0}" TargetNetId="39.120.71.102.1.1" Target64Bit="true" ShowHideConfigurations="#x6">
+		<System>
+			<Settings MaxCpus="2"/>
+			<Tasks>
+				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
+					<Name>PlcTask</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Plc>
+			<Project File="PLC1.xti"/>
+		</Plc>
+	</Project>
+</TcSmProject>
