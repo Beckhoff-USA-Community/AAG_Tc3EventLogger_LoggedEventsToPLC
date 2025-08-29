@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "dotnetLoggedEventsToPLC": {
+      "commandName": "Project",
+      "commandLineArgs": "39.120.71.102.1.1 1 MAIN.LoggedEvent"
+    }
+  }
+}

@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="6.2.485" />
     <PackageReference Include="Beckhoff.TwinCAT.TcEventLoggerAdsProxy.Net" Version="2.8.33" />
   </ItemGroup>
 

@@ -12,6 +12,27 @@ VAR
 	Clear		:BOOL:=TRUE;
 	Confirm		:BOOL:=TRUE;
 	Cnt			:UDINT;
+	
+	
+	// FB_ReadTc3Events
+    fbReadTc3Events     : FB_ReadTc3Events;
+    bReadEvents         : BOOL := TRUE;
+    nLanguage           : DINT := 1033;
+    eDateAndTimeFormat  : Tc2_Utilities.E_DateAndTimeFormat := Tc2_Utilities.E_DateAndTimeFormat.en_US;
+    bClear              : BOOL;
+    eSeverityMin        : TcEventSeverity;
+    bError              : BOOL;
+    hr                  : HRESULT;
+    hrOccuredErrorCode  : HRESULT;
+
+	nEvents1			:UDINT;
+	bError1				:BOOL;
+	
+	LoggedEvents 		:ARRAY [1..80] OF ST_ReadEventW;
+	LoggedEvent			:ST_ReadEventW;
+	
+	ResetData		:BOOL;
+	sizeofEvent		:UDINT;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -30,7 +51,15 @@ END_VAR
 		Alarm[4].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event4,bWithConfirmation:=TRUE);
 		Alarm[5].CreateEx(stEventEntry:=TC_EVENTS.LoggedEventsTest.Event5,bWithConfirmation:=TRUE);		
 END_IF
+IF ResetData THEN
+	ResetData:=FALSE;
+	MEMSET(ADR(LoggedEvents),0,SIZEOF(LoggedEvents));
+	MEMSET(ADR(LoggedEvent),0,SIZEOF(LoggedEvent));
+END_IF
 
+//sizeofEvent:=SIZEOF(LoggedEvent);
+
+LoggedEvents[1]:=LoggedEvent;
 
 IF RaiseSend THEN
 	RaiseSend:=FALSE;
@@ -58,6 +87,22 @@ IF Clear THEN
 	FOR i:=1 TO 5 DO
 		Alarm[i].Clear();
 	END_FOR
+END_IF
+
+
+
+// Call fbReadTc3Events
+fbReadTc3Events (
+    bReadEvents         := bReadEvents, 
+    nLanguageID         := nLanguage, 
+    eDateAndTimeFormat  := eDateAndTimeFormat, 
+    bClearTable         := bClear, 
+    eMinSeverity        := eSeverityMin,          // Set event filter for severity via input (filter possibility two)
+    nNumberOfEvents     => nEvents1, 
+    bError              => bError1,
+    hrErrorCode         => );
+IF fbReadTc3Events.bError THEN
+    hrOccuredErrorCode  := fbReadTc3Events.hrErrorCode; 
 END_IF]]></ST>
     </Implementation>
   </POU>
