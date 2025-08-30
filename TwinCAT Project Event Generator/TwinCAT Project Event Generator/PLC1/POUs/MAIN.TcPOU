@@ -27,12 +27,14 @@ VAR
 	LoggedEvent		   : ST_ReadEventW;
 	ResetData		   : BOOL;
 	sizeofEvent		   : UDINT;
-	
+
 	//One alarm
-	RaiseOneAlarm	   : BOOL;
-	ClearOneAlarm	   : BOOL;
-	ClearWithTrue		:BOOL;	
-	ConfirmOneAlarm	   : BOOL;
+	RaiseOneAlarm	: BOOL;
+	ClearOneAlarm	: BOOL;
+	ClearWithTrue	: BOOL;
+	ConfirmOneAlarm : BOOL;
+	Index			: INT := 1;
+	SendOneMsg		: BOOL;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// Call fbReadTc3Events
@@ -45,7 +47,7 @@ fbReadTc3Events(bReadEvents		   := bReadEvents,
 				bError			   => bError,
 				hrErrorCode		   => hr);
 
-bClearDisplay:=FALSE;
+bClearDisplay := FALSE;
 IF Init THEN
 	Init := FALSE;
 
@@ -65,8 +67,8 @@ IF Init THEN
 END_IF
 
 IF ResetData THEN
-	bClearDisplay:=TRUE;
-	ResetData := FALSE;
+	bClearDisplay := TRUE;
+	ResetData	  := FALSE;
 	MEMSET(ADR(LoggedEvents), 0, SIZEOF(LoggedEvents));
 	MEMSET(ADR(LoggedEvent), 0, SIZEOF(LoggedEvent));
 END_IF
@@ -105,29 +107,32 @@ IF ClearAlarms THEN
 	END_FOR
 END_IF
 
-
 IF RaiseOneAlarm THEN
-	RaiseOneAlarm:=FALSE;
-	Alarm[1].ipArguments.Clear().AddUDInt(Cnt);
-	Alarm[1].Raise();
+	RaiseOneAlarm := FALSE;
+	Alarm[Index].ipArguments.Clear().AddUDInt(Cnt);
+	Alarm[Index].Raise();
 END_IF
 
-
 IF ClearOneAlarm THEN
-	ClearOneAlarm:=FALSE;
-	Alarm[1].Clear();
+	ClearOneAlarm := FALSE;
+	Alarm[Index].Clear();
 END_IF
 
 IF ClearWithTrue THEN
-	ClearWithTrue:=FALSE;
-	Alarm[1].Clear(0,TRUE);
+	ClearWithTrue := FALSE;
+	Alarm[Index].Clear(0, TRUE);
 END_IF
 
 IF ConfirmOneAlarm THEN
-	ConfirmOneAlarm:=FALSE;
-	Alarm[1].Confirm();
+	ConfirmOneAlarm := FALSE;
+	Alarm[Index].Confirm();
 END_IF
-]]></ST>
+
+IF SendOneMsg THEN
+	SendOneMsg := FALSE;
+	Msg[Index].ipArguments.Clear().AddUDInt(Cnt);
+	Msg[Index].Send();
+END_IF]]></ST>
     </Implementation>
   </POU>
 </TcPlcObject>

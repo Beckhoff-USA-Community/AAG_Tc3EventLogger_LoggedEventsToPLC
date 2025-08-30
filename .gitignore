@@ -95,3 +95,7 @@ msbuild.wrn
 
 dotnetLoggedEventsToPLC/Packages/
 *.~u
+
+TwinCAT Project Event Generator/TwinCAT Project Event Generator/_Config/PLC1/PLC1 Instance.xtv
+
+TwinCAT Project Event Generator/TwinCAT Project Event Generator/_Config/PLC1/PLC1 Instance.xtv.bak
