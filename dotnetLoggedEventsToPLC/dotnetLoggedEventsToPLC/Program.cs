@@ -34,7 +34,7 @@ try
     adsClient.Connect(amsNetId, 851); // Port 851 for PLC Runtime
     
     // Read array dimensions using dynamic symbol loader (following TwinCAT ADS Guide)
-    int maxArraySize = 80; // Default fallback
+    int arraySize = 80; // Default fallback
     try
     {
         var symbolLoader = (IDynamicSymbolLoader)SymbolLoaderFactory.Create(
@@ -55,53 +55,28 @@ try
             var dimensions = arraySymbol.Dimensions;
             if (dimensions != null && dimensions.Count > 0)
             {
-                int[] lowerBounds = dimensions.LowerBounds;
-                int[] upperBounds = dimensions.UpperBounds;
                 int[] dimensionLengths = dimensions.GetDimensionLengths();
-                bool isNonZeroBased = dimensions.IsNonZeroBased;
                 
                 // Use the first dimension's element count
-                maxArraySize = dimensionLengths[0];
-                
-                Console.WriteLine($"Array Metadata:");
-                Console.WriteLine($"  - Symbol: {arraySymbol.InstancePath}");
-                Console.WriteLine($"  - Lower Bounds: [{string.Join(", ", lowerBounds)}]");
-                Console.WriteLine($"  - Upper Bounds: [{string.Join(", ", upperBounds)}]");
-                Console.WriteLine($"  - Dimension Lengths: [{string.Join(", ", dimensionLengths)}]");
-                Console.WriteLine($"  - Is Non-Zero Based: {isNonZeroBased}");
-                Console.WriteLine($"  - Total Elements: {maxArraySize}");
-                
-                // Display each dimension's element count
-                foreach (var dim in dimensions)
-                {
-                    Console.WriteLine($"  - Dimension Element Count: {dim.ElementCount}");
-                }
+                arraySize = dimensionLengths[0];
             }
-            else
-            {
-                Console.WriteLine("Could not access array dimensions, using default size");
-            }
-        }
-        else
-        {
-            Console.WriteLine($"Could not access symbol: {plcSymbolPath}");
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Warning: Could not read array dimensions - {ex.Message}");
-        Console.WriteLine($"Using default array size: {maxArraySize}");
+        Console.WriteLine($"Error: Failed to read array dimensions from PLC symbol: {ex.Message}");
+        return 1;
     }
     
-    // Get logged events (limit by array size)
-    ITcLoggedEventCollection tcLoggedEvents = logger.GetLoggedEvents((uint)maxArraySize);
+    // Get logged events limited to array size
+    ITcLoggedEventCollection tcLoggedEvents = logger.GetLoggedEvents((uint)arraySize);
     
     // Convert logged events to PLC structure array (limit by array size)
     var plcEvents = new List<ST_ReadEventW>();
     int eventCount = 0;
     foreach (ITcLoggedEvent4 tcLoggedEvent in tcLoggedEvents)
     {
-        if (eventCount >= maxArraySize) break; // Don't exceed array bounds
+        if (eventCount >= arraySize) break; // Don't exceed array bounds
         var plcEvent = new ST_ReadEventW();
         
         try
@@ -173,7 +148,7 @@ try
             // Map other properties via reflection
             var type = tcLoggedEvent.GetType();
             var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            
+
             foreach (var prop in properties)
             {
                 try
@@ -207,7 +182,8 @@ try
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Warning: Error mapping event - {ex.Message}");
+            Console.WriteLine($"Error: Failed to map logged event: {ex.Message}");
+            return 1;
         }
         
         plcEvents.Add(plcEvent);
@@ -219,23 +195,17 @@ try
     {
         try
         {
-            // Debug: Check structure size
-            int structSize = Marshal.SizeOf<ST_ReadEventW>();
-            Console.WriteLine($"C# structure size: {structSize} bytes");
-            Console.WriteLine($"Expected PLC size: 1304 bytes");
-            Console.WriteLine($"Found {plcEvents.Count} events to write");
-            
             // Create array with proper size (pad with empty structures if needed)
-            ST_ReadEventW[] eventArray = new ST_ReadEventW[maxArraySize];
+            ST_ReadEventW[] eventArray = new ST_ReadEventW[arraySize];
             
             // Fill array with actual events
-            for (int i = 0; i < plcEvents.Count && i < maxArraySize; i++)
+            for (int i = 0; i < plcEvents.Count && i < arraySize; i++)
             {
                 eventArray[i] = plcEvents[i];
             }
             
             // Fill remaining slots with empty structures if we have fewer events than array size
-            for (int i = plcEvents.Count; i < maxArraySize; i++)
+            for (int i = plcEvents.Count; i < arraySize; i++)
             {
                 eventArray[i] = new ST_ReadEventW
                 {
@@ -254,65 +224,21 @@ try
                 };
             }
             
-            // Write entire array using ADS client WriteValue (proven working method)
+            // Write entire array using ADS client WriteValue
             adsClient.WriteValue(plcSymbolPath, eventArray);
-            Console.WriteLine("Used ADS client WriteValue method");
             
-            Console.WriteLine($"Successfully wrote entire array of {eventArray.Length} elements to PLC: {plcSymbolPath}");
-            Console.WriteLine($"  - {plcEvents.Count} events with data");
-            Console.WriteLine($"  - {maxArraySize - plcEvents.Count} empty slots");
+            Console.WriteLine($"Successfully wrote {plcEvents.Count} events to PLC array: {plcSymbolPath}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error writing array to PLC - {ex.Message}");
-            
-            // Fallback to individual element writes if array write fails
-            Console.WriteLine("Attempting fallback to individual element writes...");
-            for (int i = 0; i < plcEvents.Count; i++)
-            {
-                try
-                {
-                    string elementPath = $"{plcSymbolPath}[{i + 1}]"; 
-                    adsClient.WriteValue(elementPath, plcEvents[i]);
-                    Console.WriteLine($"Wrote event {i + 1} to {elementPath}");
-                }
-                catch (Exception elemEx)
-                {
-                    Console.WriteLine($"Error writing event {i + 1} - {elemEx.Message}");
-                }
-            }
+            Console.WriteLine($"Error: Failed to write array to PLC: {ex.Message}");
+            return 1;
         }
     }
     else
     {
-        Console.WriteLine("No events to write to PLC");
+        Console.WriteLine("No events found to write to PLC");
     }
-    
-    // Also output as JSON for verification
-    var readableEvents = plcEvents.Select(evt => new
-    {
-        nSourceID = evt.nSourceID,
-        nEventID = evt.nEventID,
-        nClass = evt.nClass,
-        nConfirmState = evt.nConfirmState,
-        nResetState = evt.nResetState,
-        sSource = ST_ReadEventW.WStringToString(evt.sSource),
-        sDate = ST_ReadEventW.WStringToString(evt.sDate),
-        sTime = ST_ReadEventW.WStringToString(evt.sTime),
-        sComputer = ST_ReadEventW.WStringToString(evt.sComputer),
-        sMessageText = ST_ReadEventW.WStringToString(evt.sMessageText),
-        bQuitMessage = evt.bQuitMessage,
-        bConfirmable = evt.bConfirmable
-    }).ToArray();
-    
-    var options = new JsonSerializerOptions
-    {
-        WriteIndented = true
-    };
-    
-    string jsonOutput = JsonSerializer.Serialize(readableEvents, options);
-    Console.WriteLine("\nJSON representation:");
-    Console.WriteLine(jsonOutput);
     
     return 0;
 }
@@ -371,22 +297,4 @@ public struct ST_ReadEventW
         return bytes;
     }
     
-    // Helper method to convert WSTRING byte array back to string
-    public static string WStringToString(byte[] bytes)
-    {
-        if (bytes == null || bytes.Length == 0) return "";
-        
-        // Find the null terminator (2 bytes of zeros)
-        int length = bytes.Length;
-        for (int i = 0; i < bytes.Length - 1; i += 2)
-        {
-            if (bytes[i] == 0 && bytes[i + 1] == 0)
-            {
-                length = i;
-                break;
-            }
-        }
-        
-        return Encoding.Unicode.GetString(bytes, 0, length);
-    }
 }
