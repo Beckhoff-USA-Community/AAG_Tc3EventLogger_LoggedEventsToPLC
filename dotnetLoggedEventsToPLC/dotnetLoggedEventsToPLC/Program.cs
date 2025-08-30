@@ -39,12 +39,13 @@ try
     
     // Convert logged events to PLC structure array
     var plcEvents = new List<ST_ReadEventW>();
-    foreach (ITcLoggedEvent tcLoggedEvent in tcLoggedEvents)
+    foreach (ITcLoggedEvent4 tcLoggedEvent in tcLoggedEvents)
     {
         var plcEvent = new ST_ReadEventW();
         
         try
         {
+
             // Map basic properties using WSTRING byte arrays
             string sourceWithPrefix = $"Source:{tcLoggedEvent.SourceName ?? ""}";
             plcEvent.sSource = ST_ReadEventW.StringToWString(sourceWithPrefix, 256);
@@ -64,6 +65,7 @@ try
             }
 
             
+
             // Get severity using the correct property
             string severity = tcLoggedEvent.SeverityLevel.ToString();
             string className = eventTypeStr;
@@ -72,6 +74,10 @@ try
             DateTime eventTime = DateTime.FromFileTime(tcLoggedEvent.FileTimeRaised);
             plcEvent.sDate = ST_ReadEventW.StringToWString(eventTime.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture), 24);
             plcEvent.sTime = ST_ReadEventW.StringToWString(eventTime.ToString("h:mm:ss tt", CultureInfo.InvariantCulture), 24);
+            
+            // Check if event is confirmed and cleared
+            plcEvent.nConfirmState = (tcLoggedEvent.FileTimeConfirmed != 0) ? 1u : 0u;
+            plcEvent.nResetState = (tcLoggedEvent.FileTimeCleared != 0) ? 1u : 0u;
             
             // Map other properties via reflection
             var type = tcLoggedEvent.GetType();
