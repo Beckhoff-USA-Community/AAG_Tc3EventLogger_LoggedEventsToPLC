@@ -75,9 +75,39 @@ try
             plcEvent.sDate = ST_ReadEventW.StringToWString(eventTime.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture), 24);
             plcEvent.sTime = ST_ReadEventW.StringToWString(eventTime.ToString("h:mm:ss tt", CultureInfo.InvariantCulture), 24);
             
-            // Check if event is confirmed and cleared
-            plcEvent.nConfirmState = (tcLoggedEvent.FileTimeConfirmed != 0) ? 1u : 0u;
-            plcEvent.nResetState = (tcLoggedEvent.FileTimeCleared != 0) ? 1u : 0u;
+            // Set nConfirmState based on WithConfirmation and ConfirmationState
+            if (!tcLoggedEvent.WithConfirmation)
+            {
+                plcEvent.nConfirmState = 0; // Always 0 if confirmation not required
+            }
+            else
+            {
+                switch (tcLoggedEvent.ConfirmationState)
+                {
+                    case TcEventLoggerAdsProxyLib.ConfirmationStateEnum.WaitForConfirmation:
+                        plcEvent.nConfirmState = 1;
+                        break;
+                    case TcEventLoggerAdsProxyLib.ConfirmationStateEnum.Confirmed:
+                        plcEvent.nConfirmState = 4;
+                        break;
+                    case TcEventLoggerAdsProxyLib.ConfirmationStateEnum.Reset:
+                        plcEvent.nConfirmState = 3;
+                        break;
+                    default: // NotSupported, NotRequired
+                        plcEvent.nConfirmState = 0;
+                        break;
+                }
+            }
+            
+            // Set nResetState based on EventType and IsRaised
+            if (eventTypeStr.ToLower() == "alarm")
+            {
+                plcEvent.nResetState = tcLoggedEvent.IsRaised ? 1u : 2u;
+            }
+            else
+            {
+                plcEvent.nResetState = 0; // Not an alarm
+            }
             
             // Map other properties via reflection
             var type = tcLoggedEvent.GetType();

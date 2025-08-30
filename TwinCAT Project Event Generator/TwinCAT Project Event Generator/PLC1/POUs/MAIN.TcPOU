@@ -45,6 +45,7 @@ fbReadTc3Events(bReadEvents		   := bReadEvents,
 				bError			   => bError,
 				hrErrorCode		   => hr);
 
+bClearDisplay:=FALSE;
 IF Init THEN
 	Init := FALSE;
 
@@ -64,6 +65,7 @@ IF Init THEN
 END_IF
 
 IF ResetData THEN
+	bClearDisplay:=TRUE;
 	ResetData := FALSE;
 	MEMSET(ADR(LoggedEvents), 0, SIZEOF(LoggedEvents));
 	MEMSET(ADR(LoggedEvent), 0, SIZEOF(LoggedEvent));
