@@ -23,7 +23,7 @@ VAR
 	bError			   : BOOL;
 	hr				   : HRESULT;
 	numOfEvents		   : UDINT;
-	LoggedEvents	   : ARRAY[1..80] OF ST_ReadEventW;
+	LoggedEvents	   : ARRAY[1..200] OF ST_ReadEventW;
 	LoggedEvent		   : ST_ReadEventW;
 	ResetData		   : BOOL;
 	sizeofEvent		   : UDINT;

@@ -2,9 +2,13 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Reflection;
-using TwinCAT.Ads;
 using System.Runtime.InteropServices;
 using System.Text;
+using TwinCAT;
+using TwinCAT.Ads.TypeSystem;
+using TwinCAT.Ads;
+using TwinCAT.TypeSystem;
+
 
 // Validate command line arguments
 if (args.Length != 2)
@@ -29,8 +33,65 @@ try
     adsClient = new AdsClient();
     adsClient.Connect(amsNetId, 851); // Port 851 for PLC Runtime
     
-    // Determine array size - for ARRAY[1..80], we can write up to 80 elements
-    int maxArraySize = 80; 
+    // Read array dimensions using dynamic symbol loader (following TwinCAT ADS Guide)
+    int maxArraySize = 80; // Default fallback
+    try
+    {
+        var symbolLoader = (IDynamicSymbolLoader)SymbolLoaderFactory.Create(
+            adsClient,
+            new SymbolLoaderSettings(SymbolsLoadMode.DynamicTree)
+        );
+
+        var symbols = (DynamicSymbolsCollection)symbolLoader.SymbolsDynamic;
+        dynamic MAIN = symbols["MAIN"];
+        
+        // Navigate to the array symbol (e.g., MAIN.LoggedEvents -> LoggedEvents)
+        string arrayName = plcSymbolPath.Split('.')[1]; // Extract "LoggedEvents" from "MAIN.LoggedEvents"
+        dynamic arraySymbol = MAIN.SubSymbols[arrayName];
+        
+        if (arraySymbol != null)
+        {
+            // Get array dimensions metadata as shown in the guide
+            var dimensions = arraySymbol.Dimensions;
+            if (dimensions != null && dimensions.Count > 0)
+            {
+                int[] lowerBounds = dimensions.LowerBounds;
+                int[] upperBounds = dimensions.UpperBounds;
+                int[] dimensionLengths = dimensions.GetDimensionLengths();
+                bool isNonZeroBased = dimensions.IsNonZeroBased;
+                
+                // Use the first dimension's element count
+                maxArraySize = dimensionLengths[0];
+                
+                Console.WriteLine($"Array Metadata:");
+                Console.WriteLine($"  - Symbol: {arraySymbol.InstancePath}");
+                Console.WriteLine($"  - Lower Bounds: [{string.Join(", ", lowerBounds)}]");
+                Console.WriteLine($"  - Upper Bounds: [{string.Join(", ", upperBounds)}]");
+                Console.WriteLine($"  - Dimension Lengths: [{string.Join(", ", dimensionLengths)}]");
+                Console.WriteLine($"  - Is Non-Zero Based: {isNonZeroBased}");
+                Console.WriteLine($"  - Total Elements: {maxArraySize}");
+                
+                // Display each dimension's element count
+                foreach (var dim in dimensions)
+                {
+                    Console.WriteLine($"  - Dimension Element Count: {dim.ElementCount}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not access array dimensions, using default size");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Could not access symbol: {plcSymbolPath}");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Could not read array dimensions - {ex.Message}");
+        Console.WriteLine($"Using default array size: {maxArraySize}");
+    }
     
     // Get logged events (limit by array size)
     ITcLoggedEventCollection tcLoggedEvents = logger.GetLoggedEvents((uint)maxArraySize);
@@ -193,8 +254,9 @@ try
                 };
             }
             
-            // Write entire array using ADS client WriteValue
+            // Write entire array using ADS client WriteValue (proven working method)
             adsClient.WriteValue(plcSymbolPath, eventArray);
+            Console.WriteLine("Used ADS client WriteValue method");
             
             Console.WriteLine($"Successfully wrote entire array of {eventArray.Length} elements to PLC: {plcSymbolPath}");
             Console.WriteLine($"  - {plcEvents.Count} events with data");
