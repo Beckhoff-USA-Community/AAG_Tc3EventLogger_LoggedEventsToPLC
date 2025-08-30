@@ -7,20 +7,15 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 // Validate command line arguments
-if (args.Length != 3)
+if (args.Length != 2)
 {
-    Console.WriteLine("Usage: dotnetLoggedEventsToPLC <AMS_NetID> <NumberOfEvents> <PLC_Symbol_Path>");
-    Console.WriteLine("Example: dotnetLoggedEventsToPLC 39.120.71.102.1.1 100 MAIN.LoggedEvents");
+    Console.WriteLine("Usage: dotnetLoggedEventsToPLC <AMS_NetID> <PLC_Array_Symbol_Path>");
+    Console.WriteLine("Example: dotnetLoggedEventsToPLC 39.120.71.102.1.1 MAIN.LoggedEvents");
     return 1;
 }
 
 string amsNetId = args[0];
-if (!int.TryParse(args[1], out int numberOfEvents) || numberOfEvents <= 0)
-{
-    Console.WriteLine("Error: NumberOfEvents must be a positive integer");
-    return 1;
-}
-string plcSymbolPath = args[2];
+string plcSymbolPath = args[1];
 
 var logger = new TcEventLogger();
 AdsClient? adsClient = null;
@@ -34,13 +29,18 @@ try
     adsClient = new AdsClient();
     adsClient.Connect(amsNetId, 851); // Port 851 for PLC Runtime
     
-    // Get logged events
-    ITcLoggedEventCollection tcLoggedEvents = logger.GetLoggedEvents((uint)numberOfEvents);
+    // Determine array size - for ARRAY[1..80], we can write up to 80 elements
+    int maxArraySize = 80; 
     
-    // Convert logged events to PLC structure array
+    // Get logged events (limit by array size)
+    ITcLoggedEventCollection tcLoggedEvents = logger.GetLoggedEvents((uint)maxArraySize);
+    
+    // Convert logged events to PLC structure array (limit by array size)
     var plcEvents = new List<ST_ReadEventW>();
+    int eventCount = 0;
     foreach (ITcLoggedEvent4 tcLoggedEvent in tcLoggedEvents)
     {
+        if (eventCount >= maxArraySize) break; // Don't exceed array bounds
         var plcEvent = new ST_ReadEventW();
         
         try
@@ -150,28 +150,75 @@ try
         }
         
         plcEvents.Add(plcEvent);
+        eventCount++;
     }
     
-    // Write single event to PLC structure
+    // Write entire array to PLC using dynamic symbol WriteValue
     if (plcEvents.Count > 0)
     {
-        var evt = plcEvents[0]; // Take first event only
-        
         try
         {
             // Debug: Check structure size
             int structSize = Marshal.SizeOf<ST_ReadEventW>();
             Console.WriteLine($"C# structure size: {structSize} bytes");
             Console.WriteLine($"Expected PLC size: 1304 bytes");
-            Console.WriteLine($"Size difference: {1304 - structSize} bytes");
+            Console.WriteLine($"Found {plcEvents.Count} events to write");
             
-            // Write entire structure in one operation
-            adsClient.WriteValue(plcSymbolPath, evt);
-            Console.WriteLine($"Successfully wrote event to PLC symbol: {plcSymbolPath}");
+            // Create array with proper size (pad with empty structures if needed)
+            ST_ReadEventW[] eventArray = new ST_ReadEventW[maxArraySize];
+            
+            // Fill array with actual events
+            for (int i = 0; i < plcEvents.Count && i < maxArraySize; i++)
+            {
+                eventArray[i] = plcEvents[i];
+            }
+            
+            // Fill remaining slots with empty structures if we have fewer events than array size
+            for (int i = plcEvents.Count; i < maxArraySize; i++)
+            {
+                eventArray[i] = new ST_ReadEventW
+                {
+                    nSourceID = 0,
+                    nEventID = 0,
+                    nClass = 0,
+                    nConfirmState = 0,
+                    nResetState = 0,
+                    sSource = ST_ReadEventW.StringToWString("", 256),
+                    sDate = ST_ReadEventW.StringToWString("", 24),
+                    sTime = ST_ReadEventW.StringToWString("", 24),
+                    sComputer = ST_ReadEventW.StringToWString("", 81),
+                    sMessageText = ST_ReadEventW.StringToWString("", 256),
+                    bQuitMessage = false,
+                    bConfirmable = false
+                };
+            }
+            
+            // Write entire array using ADS client WriteValue
+            adsClient.WriteValue(plcSymbolPath, eventArray);
+            
+            Console.WriteLine($"Successfully wrote entire array of {eventArray.Length} elements to PLC: {plcSymbolPath}");
+            Console.WriteLine($"  - {plcEvents.Count} events with data");
+            Console.WriteLine($"  - {maxArraySize - plcEvents.Count} empty slots");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error writing event to PLC - {ex.Message}");
+            Console.WriteLine($"Error writing array to PLC - {ex.Message}");
+            
+            // Fallback to individual element writes if array write fails
+            Console.WriteLine("Attempting fallback to individual element writes...");
+            for (int i = 0; i < plcEvents.Count; i++)
+            {
+                try
+                {
+                    string elementPath = $"{plcSymbolPath}[{i + 1}]"; 
+                    adsClient.WriteValue(elementPath, plcEvents[i]);
+                    Console.WriteLine($"Wrote event {i + 1} to {elementPath}");
+                }
+                catch (Exception elemEx)
+                {
+                    Console.WriteLine($"Error writing event {i + 1} - {elemEx.Message}");
+                }
+            }
         }
     }
     else

@@ -73,8 +73,6 @@ IF ResetData THEN
 	MEMSET(ADR(LoggedEvent), 0, SIZEOF(LoggedEvent));
 END_IF
 
-//sizeofEvent:=SIZEOF(LoggedEvent);
-LoggedEvents[1] := LoggedEvent;
 IF RaiseAlarms THEN
 	RaiseAlarms := FALSE;
 	Cnt			:= Cnt + 1;
