@@ -1,4 +1,4 @@
-﻿using TcEventLoggerAdsProxyLib;
+using TcEventLoggerAdsProxyLib;
 using System.Globalization;
 using System.Text.Json;
 using System.Reflection;
@@ -10,245 +10,30 @@ using TwinCAT.Ads;
 using TwinCAT.TypeSystem;
 using CommandLine;
 
-// Parse command line arguments using CommandLineParser
-var options = Parser.Default.ParseArguments<Options>(args)
-    .WithParsed(opts => { })
-    .WithNotParsed(errors =>
-    {
-        Environment.Exit(1);
-    })
-    .Value;
-
-string amsNetId = options.AmsNetId;
-string plcSymbolPath = options.SymbolPath;
-uint languageId = options.LanguageId;
-E_DateAndTimeFormat dateTimeFormat = options.DateTimeFormat;
-
-// Validate symbol path format
-if (string.IsNullOrWhiteSpace(plcSymbolPath) || !plcSymbolPath.Contains('.'))
-{
-    Console.WriteLine("Error: Invalid PLC symbol path format. Expected format: MAIN.Variable or GVL.FB.Sub.Variable");
-    return 1;
-}
-
-var logger = new TcEventLogger();
-AdsClient? adsClient = null;
+// ============================================================================
+// MAIN PROGRAM ENTRY POINT
+// ============================================================================
 
 try
 {
-    // Connect to the event logger
-    logger.Connect(amsNetId);
+    var options = ParseArguments(args);
+    if (options == null) return 1;
+
+    ValidateArguments(options);
+
+    var (logger, adsClient) = ConnectToSystems(options.AmsNetId);
     
-    // Connect to PLC via ADS
-    adsClient = new AdsClient();
-    adsClient.Connect(amsNetId, 851); // Port 851 for PLC Runtime
-
-    // Read array size from PLC symbol
-    int arraySize = 0;
-    try
-    {
-        ISymbolLoader loader = SymbolLoaderFactory.Create(adsClient, SymbolLoaderSettings.Default);
-        var arraySymbol = loader.Symbols[plcSymbolPath];
-
-        if (arraySymbol == null)
-        {
-            Console.WriteLine($"Error: Symbol '{plcSymbolPath}' not found in PLC");
-            return 1;
-        }
-
-        if (arraySymbol is TwinCAT.Ads.TypeSystem.ArrayInstance arrayInstance)
-        {
-            // Verify this is an array of ST_ReadEventW structures
-            string elementTypeName = arrayInstance.ElementType.Name;
-            if (elementTypeName == "ST_ReadEventW" || elementTypeName.EndsWith(".ST_ReadEventW"))
-            {
-                arraySize = arrayInstance.Elements.Count;        
-            }
-            else
-            {
-                Console.WriteLine($"Error: Array element type '{arrayInstance.ElementType.Name}' is not ST_ReadEventW");
-                return 1;
-            }
-        }
-        else
-        {
-            Console.WriteLine($"Error: Symbol '{plcSymbolPath}' is not an array or could not be found");
-            return 1;
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: Failed to read array dimensions from PLC symbol: {ex.Message}");
-        return 1;
-    }
-
-    // Get logged events limited to array size
-    ITcLoggedEventCollection tcLoggedEvents = logger.GetLoggedEvents((uint)arraySize);
+    int arraySize = ValidateAndGetArraySize(adsClient, options.SymbolPath);
     
-    // Convert logged events to PLC structure array (limit by array size)
-    var plcEvents = new List<ST_ReadEventW>();
-    int eventCount = 0;
-    foreach (ITcLoggedEvent4 tcLoggedEvent in tcLoggedEvents)
-    {
-        if (eventCount >= arraySize) break; // Don't exceed PLC array bounds
-        var plcEvent = new ST_ReadEventW();
-        
-        try
-        {
-
-            // Map basic properties using WSTRING byte arrays
-            string sourceWithPrefix = $"Source: {tcLoggedEvent.SourceName ?? ""}";
-            plcEvent.sSource = ST_ReadEventW.StringToWString(sourceWithPrefix, 256);
-            plcEvent.sMessageText = ST_ReadEventW.StringToWString(tcLoggedEvent.GetText((int)languageId) ?? "", 256);
-            
-            // Determine event type and set nClass accordingly
-            string eventTypeStr = tcLoggedEvent.EventType.ToString();
-            switch (eventTypeStr.ToLower())
-            {
-                case "message":
-                    plcEvent.nClass = 2; // Message = 2
-                    break;
-                case "alarm":
-                    plcEvent.nClass = 7; // Alarm = 7
-                    break;
-
-            }
-
-            // Get severity
-            string severity = tcLoggedEvent.SeverityLevel.ToString();
-            // Get class name
-            string className = tcLoggedEvent.GetEventClassName((int)languageId);
-
-            // Get timestamp from FileTimeRaised property and format based on locale
-            DateTime eventTime = DateTime.FromFileTime(tcLoggedEvent.FileTimeRaised);
-            string dateFormat, timeFormat;
-            
-            switch (dateTimeFormat)
-            {
-                case E_DateAndTimeFormat.de_DE:
-                    dateFormat = "dd.MM.yyyy";
-                    timeFormat = "HH:mm:ss";
-                    break;
-                case E_DateAndTimeFormat.en_GB:
-                    dateFormat = "dd/MM/yyyy";
-                    timeFormat = "HH:mm:ss";
-                    break;
-                case E_DateAndTimeFormat.en_US:
-                default:
-                    dateFormat = "MM/dd/yyyy";
-                    timeFormat = "h:mm:ss tt";
-                    break;
-            }
-            
-            plcEvent.sDate = ST_ReadEventW.StringToWString(eventTime.ToString(dateFormat, CultureInfo.InvariantCulture), 24);
-            plcEvent.sTime = ST_ReadEventW.StringToWString(eventTime.ToString(timeFormat, CultureInfo.InvariantCulture), 24);
-            
-            // Set nConfirmState based on WithConfirmation and ConfirmationState
-            if (!tcLoggedEvent.WithConfirmation)
-            {
-                plcEvent.nConfirmState = 0; // Always 0 if confirmation not required
-            }
-            else
-            {
-                switch (tcLoggedEvent.ConfirmationState)
-                {
-                    case TcEventLoggerAdsProxyLib.ConfirmationStateEnum.WaitForConfirmation:
-                        plcEvent.nConfirmState = 1;
-                        break;
-                    case TcEventLoggerAdsProxyLib.ConfirmationStateEnum.Confirmed:
-                        plcEvent.nConfirmState = 4;
-                        break;
-                    case TcEventLoggerAdsProxyLib.ConfirmationStateEnum.Reset:
-                        plcEvent.nConfirmState = 3;
-                        break;
-                    default: // NotSupported, NotRequired
-                        plcEvent.nConfirmState = 0;
-                        break;
-                }
-            }
-            
-            // Set nResetState based on EventType and IsRaised
-            if (eventTypeStr.ToLower() == "alarm")
-            {
-                plcEvent.nResetState = tcLoggedEvent.IsRaised ? 1u : 2u;
-            }
-            else
-            {
-                plcEvent.nResetState = 0; // Not an alarm
-            }
-
-            // Set sComputer to contain severity and class name
-            string computerField = $"{severity} | {className}";
-            plcEvent.sComputer = ST_ReadEventW.StringToWString(computerField, 81);
-
-            
-            plcEvent.nSourceID = tcLoggedEvent.SourceId;
-            plcEvent.nEventID = tcLoggedEvent.EventId;
-             
-            plcEvent.bQuitMessage = false;
-            plcEvent.bConfirmable = false;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: Failed to map logged event: {ex.Message}");
-            return 1;
-        }
-        
-
-        plcEvents.Add(plcEvent);
-        eventCount++;
-    }
+    var events = GetLoggedEvents(logger, arraySize);
     
-    // Write entire array to PLC using symbol WriteValue
-    if (plcEvents.Count > 0)
-    {
-        try
-        {
-            // Create array with proper size (pad with empty structures if needed)
-            ST_ReadEventW[] eventArray = new ST_ReadEventW[arraySize];
-            
-            // Fill array with actual events
-            for (int i = 0; i < plcEvents.Count && i < arraySize; i++)
-            {
-                eventArray[i] = plcEvents[i];
-            }
-            
-            // Fill remaining slots with empty structures if we have fewer events than array size
-            for (int i = plcEvents.Count; i < arraySize; i++)
-            {
-                eventArray[i] = new ST_ReadEventW
-                {
-                    nSourceID = 0,
-                    nEventID = 0,
-                    nClass = 0,
-                    nConfirmState = 0,
-                    nResetState = 0,
-                    sSource = ST_ReadEventW.StringToWString("", 256),
-                    sDate = ST_ReadEventW.StringToWString("", 24),
-                    sTime = ST_ReadEventW.StringToWString("", 24),
-                    sComputer = ST_ReadEventW.StringToWString("", 81),
-                    sMessageText = ST_ReadEventW.StringToWString("", 256),
-                    bQuitMessage = false,
-                    bConfirmable = false
-                };
-            }
-            
-            // Write entire array using ADS client WriteValue
-            adsClient.WriteValue(plcSymbolPath, eventArray);
-            
-            Console.WriteLine($"Successfully wrote {plcEvents.Count} events to PLC array: {plcSymbolPath}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: Failed to write array to PLC: {ex.Message}");
-            return 1;
-        }
-    }
-    else
-    {
-        Console.WriteLine("No events found to write to PLC");
-    }
+    var plcEvents = ProcessEvents(events, arraySize, options.LanguageId, options.DateTimeFormat);
     
+    WriteEventsToPlc(adsClient, options.SymbolPath, plcEvents, arraySize);
+    
+    Console.WriteLine($"Successfully wrote {plcEvents.Count} events to PLC array: {options.SymbolPath}");
+    
+    CleanupConnections(logger, adsClient);
     return 0;
 }
 catch (Exception ex)
@@ -256,12 +41,324 @@ catch (Exception ex)
     Console.WriteLine($"Error: {ex.Message}");
     return 1;
 }
-finally
+
+// ============================================================================
+// ARGUMENT PARSING AND VALIDATION
+// ============================================================================
+
+static Options? ParseArguments(string[] args)
 {
-    logger.Disconnect();
+    return Parser.Default.ParseArguments<Options>(args)
+        .WithParsed(opts => { })
+        .WithNotParsed(errors =>
+        {
+            Environment.Exit(1);
+        })
+        .Value;
+}
+
+static void ValidateArguments(Options options)
+{
+    // Validate symbol path format
+    if (string.IsNullOrWhiteSpace(options.SymbolPath) || !options.SymbolPath.Contains('.'))
+    {
+        throw new ArgumentException("Invalid PLC symbol path format. Expected format: MAIN.Variable or GVL.FB.Sub.Variable");
+    }
+}
+
+// ============================================================================
+// PLC CONNECTION AND SYMBOL VALIDATION
+// ============================================================================
+
+static (TcEventLogger logger, AdsClient adsClient) ConnectToSystems(string amsNetId)
+{
+    var logger = new TcEventLogger();
+    var adsClient = new AdsClient();
+    
+    try
+    {
+        // Connect to the event logger
+        logger.Connect(amsNetId);
+        
+        // Connect to PLC via ADS
+        adsClient.Connect(amsNetId, 851); // Port 851 for PLC Runtime
+        
+        return (logger, adsClient);
+    }
+    catch
+    {
+        logger?.Disconnect();
+        adsClient?.Disconnect();
+        adsClient?.Dispose();
+        throw;
+    }
+}
+
+static int ValidateAndGetArraySize(AdsClient adsClient, string symbolPath)
+{
+    try
+    {
+        ISymbolLoader loader = SymbolLoaderFactory.Create(adsClient, SymbolLoaderSettings.Default);
+        var arraySymbol = loader.Symbols[symbolPath];
+
+        if (arraySymbol == null)
+        {
+            throw new InvalidOperationException($"Symbol '{symbolPath}' not found in PLC");
+        }
+
+        if (arraySymbol is not TwinCAT.Ads.TypeSystem.ArrayInstance arrayInstance)
+        {
+            throw new InvalidOperationException($"Symbol '{symbolPath}' is not an array or could not be found");
+        }
+
+        // Verify this is an array of ST_ReadEventW structures
+        string elementTypeName = arrayInstance.ElementType.Name;
+        if (elementTypeName != "ST_ReadEventW" && !elementTypeName.EndsWith(".ST_ReadEventW"))
+        {
+            throw new InvalidOperationException($"Array element type '{elementTypeName}' is not ST_ReadEventW");
+        }
+
+        int arraySize = arrayInstance.SubSymbols.Count;
+        Console.WriteLine($"Found array of {arraySize} elements of type: {elementTypeName}");
+        
+        return arraySize;
+    }
+    catch (Exception ex)
+    {
+        throw new InvalidOperationException($"Failed to read array dimensions from PLC symbol: {ex.Message}", ex);
+    }
+}
+
+// ============================================================================
+// EVENT PROCESSING
+// ============================================================================
+
+static ITcLoggedEventCollection GetLoggedEvents(TcEventLogger logger, int arraySize)
+{
+    return logger.GetLoggedEvents((uint)arraySize);
+}
+
+static List<ST_ReadEventW> ProcessEvents(ITcLoggedEventCollection tcLoggedEvents, int arraySize, uint languageId, E_DateAndTimeFormat dateTimeFormat)
+{
+    var plcEvents = new List<ST_ReadEventW>();
+    int eventCount = 0;
+    
+    foreach (ITcLoggedEvent4 tcLoggedEvent in tcLoggedEvents)
+    {
+        if (eventCount >= arraySize) break; // Don't exceed PLC array bounds
+        
+        try
+        {
+            var plcEvent = ConvertEventToPlcFormat(tcLoggedEvent, languageId, dateTimeFormat);
+            plcEvents.Add(plcEvent);
+            eventCount++;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to map logged event: {ex.Message}", ex);
+        }
+    }
+    
+    return plcEvents;
+}
+
+static ST_ReadEventW ConvertEventToPlcFormat(ITcLoggedEvent4 tcLoggedEvent, uint languageId, E_DateAndTimeFormat dateTimeFormat)
+{
+    var plcEvent = new ST_ReadEventW();
+    
+    // Initialize byte arrays to prevent null reference exceptions
+    InitializeByteArrays(ref plcEvent);
+
+    // Map basic properties
+    MapBasicProperties(ref plcEvent, tcLoggedEvent, languageId);
+    
+    // Set event class based on type
+    SetEventClass(ref plcEvent, tcLoggedEvent);
+    
+    // Format timestamps based on locale
+    FormatTimestamps(ref plcEvent, tcLoggedEvent, dateTimeFormat);
+    
+    // Set confirmation and reset states
+    SetConfirmationState(ref plcEvent, tcLoggedEvent);
+    SetResetState(ref plcEvent, tcLoggedEvent);
+    
+    // Set computer field with severity and class info
+    SetComputerField(ref plcEvent, tcLoggedEvent, languageId);
+
+    return plcEvent;
+}
+
+static void InitializeByteArrays(ref ST_ReadEventW plcEvent)
+{
+    plcEvent.sSource = new byte[256 * 2];
+    plcEvent.sDate = new byte[24 * 2];
+    plcEvent.sTime = new byte[24 * 2];
+    plcEvent.sComputer = new byte[81 * 2];
+    plcEvent.sMessageText = new byte[256 * 2];
+}
+
+static void MapBasicProperties(ref ST_ReadEventW plcEvent, ITcLoggedEvent4 tcLoggedEvent, uint languageId)
+{
+    string sourceWithPrefix = $"Source: {tcLoggedEvent.SourceName ?? ""}";
+    plcEvent.sSource = ST_ReadEventW.StringToWString(sourceWithPrefix, 256);
+    plcEvent.nSourceID = tcLoggedEvent.SourceId;
+    plcEvent.nEventID = tcLoggedEvent.EventId;
+
+    plcEvent.sMessageText = ST_ReadEventW.StringToWString(tcLoggedEvent.GetText((int)languageId) ?? "", 256);
+
+    plcEvent.bQuitMessage = false;
+    plcEvent.bConfirmable = false;
+}
+
+static void SetEventClass(ref ST_ReadEventW plcEvent, ITcLoggedEvent4 tcLoggedEvent)
+{
+    string eventTypeStr = tcLoggedEvent.EventType.ToString();
+    plcEvent.nClass = eventTypeStr.ToLower() switch
+    {
+        "message" => 2u,
+        "alarm" => 7u,
+        _ => 0u
+    };
+}
+
+static void FormatTimestamps(ref ST_ReadEventW plcEvent, ITcLoggedEvent4 tcLoggedEvent, E_DateAndTimeFormat dateTimeFormat)
+{
+    DateTime eventTime = DateTime.FromFileTime(tcLoggedEvent.FileTimeRaised);
+    var (dateFormat, timeFormat) = GetDateTimeFormats(dateTimeFormat);
+    
+    plcEvent.sDate = ST_ReadEventW.StringToWString(eventTime.ToString(dateFormat, CultureInfo.InvariantCulture), 24);
+    plcEvent.sTime = ST_ReadEventW.StringToWString(eventTime.ToString(timeFormat, CultureInfo.InvariantCulture), 24);
+}
+
+static (string dateFormat, string timeFormat) GetDateTimeFormats(E_DateAndTimeFormat dateTimeFormat)
+{
+    return dateTimeFormat switch
+    {
+        E_DateAndTimeFormat.de_DE => ("dd.MM.yyyy", "HH:mm:ss"),
+        E_DateAndTimeFormat.en_GB => ("dd/MM/yyyy", "HH:mm:ss"),
+        E_DateAndTimeFormat.en_US => ("MM/dd/yyyy", "h:mm:ss tt"),
+        _ => ("MM/dd/yyyy", "h:mm:ss tt")
+    };
+}
+
+static void SetConfirmationState(ref ST_ReadEventW plcEvent, ITcLoggedEvent4 tcLoggedEvent)
+{
+    if (!tcLoggedEvent.WithConfirmation)
+    {
+        plcEvent.nConfirmState = 0; // Always 0 if confirmation not required
+    }
+    else
+    {
+        plcEvent.nConfirmState = tcLoggedEvent.ConfirmationState switch
+        {
+            TcEventLoggerAdsProxyLib.ConfirmationStateEnum.WaitForConfirmation => 1u,
+            TcEventLoggerAdsProxyLib.ConfirmationStateEnum.Confirmed => 4u,
+            TcEventLoggerAdsProxyLib.ConfirmationStateEnum.Reset => 3u,
+            _ => 0u // NotSupported, NotRequired
+        };
+    }
+}
+
+static void SetResetState(ref ST_ReadEventW plcEvent, ITcLoggedEvent4 tcLoggedEvent)
+{
+    string eventTypeStr = tcLoggedEvent.EventType.ToString();
+    if (eventTypeStr.ToLower() == "alarm")
+    {
+        plcEvent.nResetState = tcLoggedEvent.IsRaised ? 1u : 2u;
+    }
+    else
+    {
+        plcEvent.nResetState = 0; // Not an alarm
+    }
+}
+
+static void SetComputerField(ref ST_ReadEventW plcEvent, ITcLoggedEvent4 tcLoggedEvent, uint languageId)
+{
+    string severity = tcLoggedEvent.SeverityLevel.ToString();
+    string className = tcLoggedEvent.GetEventClassName((int)languageId);
+    string computerField = $"{severity} | {className}";
+    plcEvent.sComputer = ST_ReadEventW.StringToWString(computerField, 81);
+}
+
+// ============================================================================
+// PLC WRITING
+// ============================================================================
+
+static void WriteEventsToPlc(AdsClient adsClient, string symbolPath, List<ST_ReadEventW> plcEvents, int arraySize)
+{
+    if (plcEvents.Count == 0)
+    {
+        Console.WriteLine("No events found to write to PLC");
+        return;
+    }
+
+    try
+    {
+        // Create array with proper size (pad with empty structures if needed)
+        ST_ReadEventW[] eventArray = new ST_ReadEventW[arraySize];
+        
+        // Fill array with actual events
+        for (int i = 0; i < plcEvents.Count && i < arraySize; i++)
+        {
+            eventArray[i] = plcEvents[i];
+        }
+        
+        // Fill remaining slots with empty structures if we have fewer events than array size
+        for (int i = plcEvents.Count; i < arraySize; i++)
+        {
+            eventArray[i] = CreateEmptyEvent();
+        }
+        
+        // Write entire array using ADS client WriteValue
+        adsClient.WriteValue(symbolPath, eventArray);
+    }
+    catch (Exception ex)
+    {
+        throw new InvalidOperationException($"Failed to write array to PLC: {ex.Message}", ex);
+    }
+}
+
+static ST_ReadEventW CreateEmptyEvent()
+{
+    var emptyEvent = new ST_ReadEventW
+    {
+        nSourceID = 0,
+        nEventID = 0,
+        nClass = 0,
+        nConfirmState = 0,
+        nResetState = 0,
+        bQuitMessage = false,
+        bConfirmable = false
+    };
+    
+    // Initialize byte arrays
+    InitializeByteArrays(ref emptyEvent);
+    
+    // Set empty strings
+    emptyEvent.sSource = ST_ReadEventW.StringToWString("", 256);
+    emptyEvent.sDate = ST_ReadEventW.StringToWString("", 24);
+    emptyEvent.sTime = ST_ReadEventW.StringToWString("", 24);
+    emptyEvent.sComputer = ST_ReadEventW.StringToWString("", 81);
+    emptyEvent.sMessageText = ST_ReadEventW.StringToWString("", 256);
+    
+    return emptyEvent;
+}
+
+// ============================================================================
+// CLEANUP
+// ============================================================================
+
+static void CleanupConnections(TcEventLogger? logger, AdsClient? adsClient)
+{
+    logger?.Disconnect();
     adsClient?.Disconnect();
     adsClient?.Dispose();
+
 }
+
+// ============================================================================
+// DATA STRUCTURES AND ENUMS
+// ============================================================================
 
 // Structure matching PLC ST_ReadEventW
 [StructLayout(LayoutKind.Sequential, Pack = 0)]
@@ -305,7 +402,6 @@ public struct ST_ReadEventW
         }
         return bytes;
     }
-    
 }
 
 // Enum to match PLC E_DateAndTimeFormat

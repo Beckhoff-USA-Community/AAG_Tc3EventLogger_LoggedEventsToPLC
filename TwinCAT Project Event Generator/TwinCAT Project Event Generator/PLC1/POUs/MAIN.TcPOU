@@ -6,8 +6,8 @@ VAR
 	// FB_ReadTc3Events
 	fbReadTc3Events	   : FB_ReadTc3Events2;
 	bReadEvents		   : BOOL							   := TRUE;
-	nLanguage		   : DINT							   := 1031;
-	eDateAndTimeFormat : Tc2_Utilities.E_DateAndTimeFormat := Tc2_Utilities.E_DateAndTimeFormat.de_DE;
+	nLanguage		   : DINT							   := 1033;
+	eDateAndTimeFormat : Tc2_Utilities.E_DateAndTimeFormat := Tc2_Utilities.E_DateAndTimeFormat.en_US;
 	bClearDisplay	   : BOOL;
 	eSeverityMin	   : TcEventSeverity;
 	bError			   : BOOL;
