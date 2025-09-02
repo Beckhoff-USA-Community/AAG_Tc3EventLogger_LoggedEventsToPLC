@@ -11,6 +11,13 @@ using TwinCAT.TypeSystem;
 using CommandLine;
 
 // ============================================================================
+// ReadTc3Events2 - TwinCAT Event Logger to PLC Array Writer
+// 
+// This application reads logged events from TwinCAT Event Logger and writes
+// them to a PLC array in ST_ReadEventW format with configurable localization.
+// ============================================================================
+
+// ============================================================================
 // MAIN PROGRAM ENTRY POINT
 // ============================================================================
 
@@ -362,7 +369,7 @@ static void CleanupConnections(TcEventLogger? logger, AdsClient? adsClient)
 // DATA STRUCTURES AND ENUMS
 // ============================================================================
 
-// Structure matching PLC ST_ReadEventW
+// Structure matching PLC ST_ReadEventW for ReadTc3Events2
 [StructLayout(LayoutKind.Sequential, Pack = 0)]
 public struct ST_ReadEventW
 {
@@ -406,7 +413,7 @@ public struct ST_ReadEventW
     }
 }
 
-// Enum to match PLC E_DateAndTimeFormat
+// Enum to match PLC E_DateAndTimeFormat for ReadTc3Events2
 public enum E_DateAndTimeFormat
 {
     de_DE = 0,
@@ -414,7 +421,7 @@ public enum E_DateAndTimeFormat
     en_US = 2
 }
 
-// Command line options class
+// Command line options class for ReadTc3Events2
 public class Options
 {
     [Option("amsnetid", Required = true, HelpText = "TwinCAT AMS Net ID (e.g., 39.120.71.102.1.1)")]

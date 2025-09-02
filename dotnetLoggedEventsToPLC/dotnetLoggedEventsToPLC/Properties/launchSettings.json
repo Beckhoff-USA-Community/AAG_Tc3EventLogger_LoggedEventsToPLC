@@ -1,14 +1,14 @@
 {
   "profiles": {
-    "English": {
+    "ReadTc3Events2 (English)": {
       "commandName": "Project",
       "commandLineArgs": "--amsnetid 39.120.71.102.1.1 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2"
     },
-    "German": {
+    "ReadTc3Events2 (German)": {
       "commandName": "Project",
       "commandLineArgs": "--amsnetid 39.120.71.102.1.1 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0"
     },
-    "English UK": {
+    "ReadTc3Events2 (English UK)": {
       "commandName": "Project", 
       "commandLineArgs": "--amsnetid 39.120.71.102.1.1 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 2057 --datetimeformat 1"
     }
