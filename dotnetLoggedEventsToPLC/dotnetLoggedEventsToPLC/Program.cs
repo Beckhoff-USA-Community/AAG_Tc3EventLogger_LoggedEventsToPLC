@@ -32,34 +32,17 @@ try
     // Connect to PLC via ADS
     adsClient = new AdsClient();
     adsClient.Connect(amsNetId, 851); // Port 851 for PLC Runtime
-    
-    // Read array dimensions using dynamic symbol loader (following TwinCAT ADS Guide)
-    int arraySize = 80; // Default fallback
+
+    // Read array size from PLC symbol
+    int arraySize = 0;
     try
     {
-        var symbolLoader = (IDynamicSymbolLoader)SymbolLoaderFactory.Create(
-            adsClient,
-            new SymbolLoaderSettings(SymbolsLoadMode.DynamicTree)
-        );
+        ISymbolLoader loader = SymbolLoaderFactory.Create(adsClient, SymbolLoaderSettings.Default);
+        var arraySymbol = loader.Symbols[plcSymbolPath];
 
-        var symbols = (DynamicSymbolsCollection)symbolLoader.SymbolsDynamic;
-        dynamic MAIN = symbols["MAIN"];
-        
-        // Navigate to the array symbol (e.g., MAIN.LoggedEvents -> LoggedEvents)
-        string arrayName = plcSymbolPath.Split('.')[1]; // Extract "LoggedEvents" from "MAIN.LoggedEvents"
-        dynamic arraySymbol = MAIN.SubSymbols[arrayName];
-        
-        if (arraySymbol != null)
+        if (arraySymbol is TwinCAT.Ads.TypeSystem.ArrayInstance arrayInstance)
         {
-            // Get array dimensions metadata as shown in the guide
-            var dimensions = arraySymbol.Dimensions;
-            if (dimensions != null && dimensions.Count > 0)
-            {
-                int[] dimensionLengths = dimensions.GetDimensionLengths();
-                
-                // Use the first dimension's element count
-                arraySize = dimensionLengths[0];
-            }
+            arraySize = arrayInstance.Elements.Count;
         }
     }
     catch (Exception ex)

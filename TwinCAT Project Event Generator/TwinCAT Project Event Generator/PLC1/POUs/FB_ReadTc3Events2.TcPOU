@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_ReadTc3Events2" Id="{5a6edfd8-5abe-4422-80aa-514948601d1b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadTc3Events2 EXTENDS FB_ReadTc3Events
+VAR_OUTPUT
+	LoggedEvents: ARRAY [1..200] OF ST_ReadEventW;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[SUPER^();]]></ST>
+    </Implementation>
+    <Method Name="ReadLoggedEvents" Id="{936688d8-92ba-4ae8-8c66-ec3f8ec0b489}">
+      <Declaration><![CDATA[METHOD ReadLoggedEvents : HRESULT
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
