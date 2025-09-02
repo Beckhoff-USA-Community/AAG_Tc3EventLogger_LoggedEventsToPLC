@@ -24,25 +24,48 @@ try
     var options = ParseArguments(args);
     if (options == null) return 1;
 
+    // Initialize logging (overwrites previous log file)
+    string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ReadTc3Events2.log");
+    InitializeLogFile(logFilePath);
+    LogToFile(logFilePath, "=== ReadTc3Events2 Session Started ===");
+    LogToFile(logFilePath, $"Timestamp: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    LogToFile(logFilePath, $"Input Parameters:");
+    LogToFile(logFilePath, $"  AMS Net ID: {options.AmsNetId}");
+    LogToFile(logFilePath, $"  Symbol Path: {options.SymbolPath}");
+    LogToFile(logFilePath, $"  Language ID: {options.LanguageId}");
+    LogToFile(logFilePath, $"  DateTime Format: {options.DateTimeFormat} ({(int)options.DateTimeFormat})");
+
     ValidateArguments(options);
+    LogToFile(logFilePath, "Arguments validated successfully");
 
     var (logger, adsClient) = ConnectToSystems(options.AmsNetId);
+    LogToFile(logFilePath, "Connected to TwinCAT Event Logger and ADS Client");
     
     int arraySize = ValidateAndGetArraySize(adsClient, options.SymbolPath);
+    LogToFile(logFilePath, $"Array size determined: {arraySize} elements");
     
     var events = GetLoggedEvents(logger, arraySize);
+    LogToFile(logFilePath, $"Retrieved {events.Count} logged events from TwinCAT");
     
     var plcEvents = ProcessEvents(events, arraySize, options.LanguageId, options.DateTimeFormat);
+    LogToFile(logFilePath, $"Processed {plcEvents.Count} events for PLC format");
     
     WriteEventsToPlc(adsClient, options.SymbolPath, plcEvents, arraySize);
+    LogToFile(logFilePath, $"Successfully wrote {plcEvents.Count} events to PLC array");
     
     Console.WriteLine($"Successfully wrote {plcEvents.Count} events to PLC array: {options.SymbolPath}");
+    LogToFile(logFilePath, "=== Session Completed Successfully ===");
     
     CleanupConnections(logger, adsClient);
     return 0;
 }
 catch (Exception ex)
 {
+    string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ReadTc3Events2.log");
+    LogToFile(logFilePath, $"ERROR: {ex.Message}");
+    LogToFile(logFilePath, $"Stack Trace: {ex.StackTrace}");
+    LogToFile(logFilePath, "=== Session Failed ===");
+    
     Console.WriteLine($"Error: {ex.Message}");
     return 1;
 }
@@ -392,6 +415,36 @@ static void CleanupConnections(TcEventLogger? logger, AdsClient? adsClient)
     adsClient?.Disconnect();
     adsClient?.Dispose();
 
+}
+
+// ============================================================================
+// LOGGING UTILITIES
+// ============================================================================
+
+static void LogToFile(string filePath, string message)
+{
+    try
+    {
+        string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}";
+        File.AppendAllText(filePath, logEntry + Environment.NewLine);
+    }
+    catch
+    {
+        // Ignore logging errors to prevent them from affecting the main application
+    }
+}
+
+static void InitializeLogFile(string filePath)
+{
+    try
+    {
+        // Overwrite the file at the start of each session
+        File.WriteAllText(filePath, "");
+    }
+    catch
+    {
+        // Ignore logging errors to prevent them from affecting the main application
+    }
 }
 
 // ============================================================================
