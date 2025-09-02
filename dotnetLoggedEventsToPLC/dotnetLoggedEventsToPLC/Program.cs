@@ -14,7 +14,7 @@ using TwinCAT.TypeSystem;
 if (args.Length != 2)
 {
     Console.WriteLine("Usage: dotnetLoggedEventsToPLC <AMS_NetID> <PLC_Array_Symbol_Path>");
-    Console.WriteLine("Example: dotnetLoggedEventsToPLC 39.120.71.102.1.1 MAIN.LoggedEvents");
+    Console.WriteLine("Example: dotnetLoggedEventsToPLC 39.120.71.102.1.1 MAIN.fbReadTc3Events.LoggedEvents");
     return 1;
 }
 
@@ -42,7 +42,21 @@ try
 
         if (arraySymbol is TwinCAT.Ads.TypeSystem.ArrayInstance arrayInstance)
         {
-            arraySize = arrayInstance.Elements.Count;
+            // Verify this is an array of ST_ReadEventW structures
+            if (arrayInstance.ElementType.Name.EndsWith("ST_ReadEventW"))
+            {
+                arraySize = arrayInstance.Elements.Count;        
+            }
+            else
+            {
+                Console.WriteLine($"Error: Array element type '{arrayInstance.ElementType.Name}' is not ST_ReadEventW");
+                return 1;
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Error: Symbol '{plcSymbolPath}' is not an array or could not be found");
+            return 1;
         }
     }
     catch (Exception ex)
@@ -59,14 +73,14 @@ try
     int eventCount = 0;
     foreach (ITcLoggedEvent4 tcLoggedEvent in tcLoggedEvents)
     {
-        if (eventCount >= arraySize) break; // Don't exceed array bounds
+        if (eventCount >= arraySize) break; // Don't exceed PLC array bounds
         var plcEvent = new ST_ReadEventW();
         
         try
         {
 
             // Map basic properties using WSTRING byte arrays
-            string sourceWithPrefix = $"Source:{tcLoggedEvent.SourceName ?? ""}";
+            string sourceWithPrefix = $"Source: {tcLoggedEvent.SourceName ?? ""}";
             plcEvent.sSource = ST_ReadEventW.StringToWString(sourceWithPrefix, 256);
             plcEvent.sMessageText = ST_ReadEventW.StringToWString(tcLoggedEvent.GetText(CultureInfo.CurrentCulture.LCID) ?? "", 256);
             
@@ -83,12 +97,11 @@ try
 
             }
 
-            
-
-            // Get severity using the correct property
+            // Get severity
             string severity = tcLoggedEvent.SeverityLevel.ToString();
-            string className = eventTypeStr;
-            
+            // Get class name
+            string className = tcLoggedEvent.GetEventClassName(CultureInfo.CurrentCulture.LCID);//eventTypeStr;
+
             // Get timestamp from FileTimeRaised property
             DateTime eventTime = DateTime.FromFileTime(tcLoggedEvent.FileTimeRaised);
             plcEvent.sDate = ST_ReadEventW.StringToWString(eventTime.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture), 24);
@@ -127,39 +140,15 @@ try
             {
                 plcEvent.nResetState = 0; // Not an alarm
             }
-            
-            // Map other properties via reflection
-            var type = tcLoggedEvent.GetType();
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-            foreach (var prop in properties)
-            {
-                try
-                {
-                    var value = prop.GetValue(tcLoggedEvent);
-                    switch (prop.Name.ToLower())
-                    {
-                        case "sourceid":
-                            if (value is uint sourceId) plcEvent.nSourceID = sourceId;
-                            break;
-                        case "eventid":
-                        case "id":
-                            if (value is uint eventId) plcEvent.nEventID = eventId;
-                            break;
-                    }
-                }
-                catch
-                {
-                    // Skip properties that can't be mapped
-                }
-            }
-            
             // Set sComputer to contain severity and class name
             string computerField = $"{severity} | {className}";
             plcEvent.sComputer = ST_ReadEventW.StringToWString(computerField, 81);
+
             
-            // Date and time are now set directly from FileTimeRaised, no fallback needed
-            
+            plcEvent.nSourceID = tcLoggedEvent.SourceId;
+            plcEvent.nEventID = tcLoggedEvent.EventId;
+             
             plcEvent.bQuitMessage = false;
             plcEvent.bConfirmable = false;
         }
@@ -169,6 +158,7 @@ try
             return 1;
         }
         
+
         plcEvents.Add(plcEvent);
         eventCount++;
     }

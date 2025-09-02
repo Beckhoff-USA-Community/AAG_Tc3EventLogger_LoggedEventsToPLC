@@ -2,11 +2,18 @@
 <TcPlcObject Version="1.1.0.1">
   <POU Name="FB_ReadTc3Events2" Id="{5a6edfd8-5abe-4422-80aa-514948601d1b}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadTc3Events2 EXTENDS FB_ReadTc3Events
+VAR_INPUT
+	bClearLoggedTable	:BOOL;
+END_VAR
 VAR_OUTPUT
 	LoggedEvents: ARRAY [1..200] OF ST_ReadEventW;
 END_VAR]]></Declaration>
     <Implementation>
-      <ST><![CDATA[SUPER^();]]></ST>
+      <ST><![CDATA[SUPER^();
+
+IF bClearLoggedTable THEN
+	MEMSET(ADR(LoggedEvents),0,SIZEOF(LoggedEvents));
+END_IF]]></ST>
     </Implementation>
     <Method Name="ReadLoggedEvents" Id="{936688d8-92ba-4ae8-8c66-ec3f8ec0b489}">
       <Declaration><![CDATA[METHOD ReadLoggedEvents : HRESULT
