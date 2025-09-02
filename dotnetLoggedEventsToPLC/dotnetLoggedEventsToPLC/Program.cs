@@ -8,36 +8,21 @@ using TwinCAT;
 using TwinCAT.Ads.TypeSystem;
 using TwinCAT.Ads;
 using TwinCAT.TypeSystem;
+using CommandLine;
 
+// Parse command line arguments using CommandLineParser
+var options = Parser.Default.ParseArguments<Options>(args)
+    .WithParsed(opts => { })
+    .WithNotParsed(errors =>
+    {
+        Environment.Exit(1);
+    })
+    .Value;
 
-// Validate command line arguments
-if (args.Length != 4)
-{
-    Console.WriteLine("Usage: dotnetLoggedEventsToPLC <AMS_NetID> <PLC_Array_Symbol_Path> <Language_ID> <DateTimeFormat>");
-    Console.WriteLine("Example: dotnetLoggedEventsToPLC 39.120.71.102.1.1 MAIN.fbReadTc3Events.LoggedEvents 1033 en_US");
-    Console.WriteLine("Language ID: 1033=English, 1031=German, 2057=English(UK)");
-    Console.WriteLine("DateTime Format: de_DE, en_GB, en_US");
-    return 1;
-}
-
-string amsNetId = args[0];
-string plcSymbolPath = args[1];
-string languageIdStr = args[2];
-string dateTimeFormat = args[3];
-
-// Parse and validate language ID
-if (!uint.TryParse(languageIdStr, out uint languageId))
-{
-    Console.WriteLine($"Error: Invalid language ID '{languageIdStr}'. Must be a number (e.g., 1033 for English)");
-    return 1;
-}
-
-// Validate date/time format
-if (dateTimeFormat != "de_DE" && dateTimeFormat != "en_GB" && dateTimeFormat != "en_US")
-{
-    Console.WriteLine($"Error: Invalid DateTime format '{dateTimeFormat}'. Must be one of: de_DE, en_GB, en_US");
-    return 1;
-}
+string amsNetId = options.AmsNetId;
+string plcSymbolPath = options.SymbolPath;
+uint languageId = options.LanguageId;
+E_DateAndTimeFormat dateTimeFormat = options.DateTimeFormat;
 
 // Validate symbol path format
 if (string.IsNullOrWhiteSpace(plcSymbolPath) || !plcSymbolPath.Contains('.'))
@@ -140,15 +125,15 @@ try
             
             switch (dateTimeFormat)
             {
-                case "de_DE":
+                case E_DateAndTimeFormat.de_DE:
                     dateFormat = "dd.MM.yyyy";
                     timeFormat = "HH:mm:ss";
                     break;
-                case "en_GB":
+                case E_DateAndTimeFormat.en_GB:
                     dateFormat = "dd/MM/yyyy";
                     timeFormat = "HH:mm:ss";
                     break;
-                case "en_US":
+                case E_DateAndTimeFormat.en_US:
                 default:
                     dateFormat = "MM/dd/yyyy";
                     timeFormat = "h:mm:ss tt";
@@ -214,7 +199,7 @@ try
         eventCount++;
     }
     
-    // Write entire array to PLC using dynamic symbol WriteValue
+    // Write entire array to PLC using symbol WriteValue
     if (plcEvents.Count > 0)
     {
         try
@@ -321,4 +306,28 @@ public struct ST_ReadEventW
         return bytes;
     }
     
+}
+
+// Enum to match PLC E_DateAndTimeFormat
+public enum E_DateAndTimeFormat
+{
+    de_DE = 0,
+    en_GB = 1, 
+    en_US = 2
+}
+
+// Command line options class
+public class Options
+{
+    [Option("amsnetid", Required = true, HelpText = "TwinCAT AMS Net ID (e.g., 39.120.71.102.1.1)")]
+    public string AmsNetId { get; set; } = string.Empty;
+
+    [Option("symbolpath", Required = true, HelpText = "Full path to LoggedEvents array in PLC (e.g., MAIN.fbReadTc3Events.LoggedEvents)")]
+    public string SymbolPath { get; set; } = string.Empty;
+
+    [Option("languageid", Required = true, HelpText = "Language ID (1033=English, 1031=German, 2057=English UK)")]
+    public uint LanguageId { get; set; }
+
+    [Option("datetimeformat", Required = true, HelpText = "DateTime format enum value (0=de_DE, 1=en_GB, 2=en_US)")]
+    public E_DateAndTimeFormat DateTimeFormat { get; set; }
 }
