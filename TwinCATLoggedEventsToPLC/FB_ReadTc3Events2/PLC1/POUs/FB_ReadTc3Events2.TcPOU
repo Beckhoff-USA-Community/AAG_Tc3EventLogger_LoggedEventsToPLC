@@ -6,7 +6,7 @@ VAR_INPUT
 	bClearLoggedTable	:BOOL;
 END_VAR
 VAR_OUTPUT
-	LoggedEvents: ARRAY [1..200] OF ST_ReadEventW;
+	LoggedEvents		: ARRAY [1..200] OF ST_ReadEventW;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();
@@ -18,8 +18,11 @@ END_IF]]></ST>
     <Method Name="ReadLoggedEvents" Id="{936688d8-92ba-4ae8-8c66-ec3f8ec0b489}">
       <Declaration><![CDATA[METHOD ReadLoggedEvents : HRESULT
 VAR_INPUT
+	PathToDll		:STRING(255);
 END_VAR
-]]></Declaration>
+VAR_INST
+	
+END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[]]></ST>
       </Implementation>

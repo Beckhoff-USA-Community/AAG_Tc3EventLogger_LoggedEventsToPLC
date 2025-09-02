@@ -67,7 +67,7 @@
               <v>a792ed18-2177-4dfa-99c1-d600cfcb8917</v>
             </d>
             <d n="FbProperties" t="CaseInsensitiveHashtable" />
-            <v n="FbName">"NotImportant"</v>
+            <v n="FbName">"__VisuInitInstantiation_Fb"</v>
             <v n="FbGuid">{c1982ff9-ad02-4f3f-9b4c-a7134e97c6de}</v>
           </o>
           <o n="TargetProperties" t="VisualizationTargetProperties">

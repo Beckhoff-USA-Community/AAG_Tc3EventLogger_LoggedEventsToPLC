@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # TcXaeShell Solution File, Format Version 11.00
 VisualStudioVersion = 17.7.34302.85
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{B1E792BE-AA5F-4E3C-8C82-674BF9C0715B}") = "TwinCAT Project Event Generator", "TwinCAT Project Event Generator\TwinCAT Project Event Generator.tsproj", "{AF710953-CA2D-41B4-9EFE-9AC0C3F0DDA0}"
+Project("{B1E792BE-AA5F-4E3C-8C82-674BF9C0715B}") = "TwinCAT Project", "FB_ReadTc3Events2\TwinCAT Project.tsproj", "{AF710953-CA2D-41B4-9EFE-9AC0C3F0DDA0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
