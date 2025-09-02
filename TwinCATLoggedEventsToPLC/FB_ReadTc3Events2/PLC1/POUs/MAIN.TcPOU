@@ -2,7 +2,7 @@
 <TcPlcObject Version="1.1.0.1">
   <POU Name="MAIN" Id="{8e279f0e-7f0a-4414-b3f0-94b367b48d58}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
-VAR	
+VAR
 	// FB_ReadTc3Events
 	fbReadTc3Events	   : FB_ReadTc3Events2;
 	bReadEvents		   : BOOL							   := TRUE;
@@ -13,6 +13,9 @@ VAR
 	bError			   : BOOL;
 	hr				   : HRESULT;
 	numOfEvents		   : UDINT;
+	ReadLoggedEvents   : BOOL;
+	Loaded			   : BOOL;
+	Result			   : HRESULT;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// Call fbReadTc3Events
@@ -26,7 +29,11 @@ fbReadTc3Events(bReadEvents		   := bReadEvents,
 				bError			   => bError,
 				hrErrorCode		   => hr);
 
-bClearDisplay := FALSE;]]></ST>
+bClearDisplay := FALSE;
+
+IF ReadLoggedEvents THEN
+	Loaded:=fbReadTc3Events.ReadLoggedEvents(bExec:=ReadLoggedEvents , PathToDll:='' , hrErrorCode=>Result );
+END_IF]]></ST>
     </Implementation>
   </POU>
 </TcPlcObject>

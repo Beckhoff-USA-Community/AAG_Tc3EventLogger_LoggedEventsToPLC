@@ -1,7 +1,5 @@
 using TcEventLoggerAdsProxyLib;
 using System.Globalization;
-using System.Text.Json;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using TwinCAT;

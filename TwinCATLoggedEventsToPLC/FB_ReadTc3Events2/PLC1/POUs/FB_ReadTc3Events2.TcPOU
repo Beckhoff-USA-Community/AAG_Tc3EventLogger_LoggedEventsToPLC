@@ -3,28 +3,67 @@
   <POU Name="FB_ReadTc3Events2" Id="{5a6edfd8-5abe-4422-80aa-514948601d1b}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadTc3Events2 EXTENDS FB_ReadTc3Events
 VAR_INPUT
-	bClearLoggedTable	:BOOL;
+	bClearLoggedTable : BOOL;
 END_VAR
+
 VAR_OUTPUT
-	LoggedEvents		: ARRAY [1..200] OF ST_ReadEventW;
+	LoggedEvents : ARRAY[1..200] OF ST_ReadEventW;
+END_VAR
+
+VAR
+	CallReadTc3Events2 : NT_StartProcess;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();
-
 IF bClearLoggedTable THEN
-	MEMSET(ADR(LoggedEvents),0,SIZEOF(LoggedEvents));
-END_IF]]></ST>
+	MEMSET(ADR(LoggedEvents), 0, SIZEOF(LoggedEvents));
+END_IF
+
+CallReadTc3Events2(NETID	 := '',
+				   PATHSTR	 :='/usr/local/bin/dotnet',
+				   DIRNAME	 :='"/usr/local/etc/TwinCAT/3.1/Components/ReadTc3Events2/net8.0"',
+				   COMNDLINE :='"ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2"');]]></ST>
     </Implementation>
     <Method Name="ReadLoggedEvents" Id="{936688d8-92ba-4ae8-8c66-ec3f8ec0b489}">
-      <Declaration><![CDATA[METHOD ReadLoggedEvents : HRESULT
+      <Declaration><![CDATA[METHOD ReadLoggedEvents : BOOL;
 VAR_INPUT
-	PathToDll		:STRING(255);
+	bExec	  : REFERENCE TO BOOL;
+	PathToDll : T_MaxString;
 END_VAR
+
+VAR_OUTPUT
+	hrErrorCode : HRESULT;
+END_VAR
+
 VAR_INST
-	
+	Step :UDINT;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[CASE Step OF
+	0:
+		CallReadTc3Events2.PATHSTR := PathToDll;
+		CallReadTc3Events2.START := TRUE;
+		Step := 5;
+	5://Check busy
+		IF CallReadTc3Events2.BUSY THEN
+			Step := 10;
+		END_IF
+
+	10:
+		IF NOT CallReadTc3Events2.BUSY THEN
+			IF NOT CallReadTc3Events2.ERR THEN
+				hrErrorCode		 := 0;
+				ReadLoggedEvents := TRUE;
+			ELSE
+				hrErrorCode		 := CallReadTc3Events2.ERRID;
+				ReadLoggedEvents := FALSE;
+			END_IF
+
+			bExec := FALSE;
+			Step  := 0;
+			CallReadTc3Events2.START := FALSE;
+		END_IF
+END_CASE]]></ST>
       </Implementation>
     </Method>
   </POU>
