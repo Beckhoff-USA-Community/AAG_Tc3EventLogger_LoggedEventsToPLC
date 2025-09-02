@@ -21,6 +21,13 @@ if (args.Length != 2)
 string amsNetId = args[0];
 string plcSymbolPath = args[1];
 
+// Validate symbol path format
+if (string.IsNullOrWhiteSpace(plcSymbolPath) || !plcSymbolPath.Contains('.'))
+{
+    Console.WriteLine("Error: Invalid PLC symbol path format. Expected format: MAIN.Variable or GVL.FB.Sub.Variable");
+    return 1;
+}
+
 var logger = new TcEventLogger();
 AdsClient? adsClient = null;
 
@@ -40,10 +47,17 @@ try
         ISymbolLoader loader = SymbolLoaderFactory.Create(adsClient, SymbolLoaderSettings.Default);
         var arraySymbol = loader.Symbols[plcSymbolPath];
 
+        if (arraySymbol == null)
+        {
+            Console.WriteLine($"Error: Symbol '{plcSymbolPath}' not found in PLC");
+            return 1;
+        }
+
         if (arraySymbol is TwinCAT.Ads.TypeSystem.ArrayInstance arrayInstance)
         {
             // Verify this is an array of ST_ReadEventW structures
-            if (arrayInstance.ElementType.Name.EndsWith("ST_ReadEventW"))
+            string elementTypeName = arrayInstance.ElementType.Name;
+            if (elementTypeName == "ST_ReadEventW" || elementTypeName.EndsWith(".ST_ReadEventW"))
             {
                 arraySize = arrayInstance.Elements.Count;        
             }
