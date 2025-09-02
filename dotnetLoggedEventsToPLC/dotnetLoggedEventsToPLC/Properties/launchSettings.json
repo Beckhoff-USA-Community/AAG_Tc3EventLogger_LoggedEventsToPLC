@@ -2,7 +2,7 @@
   "profiles": {
     "dotnetLoggedEventsToPLC": {
       "commandName": "Project",
-      "commandLineArgs": "39.120.71.102.1.1 MAIN.fbReadTc3Events.LoggedEvents"
+      "commandLineArgs": "39.120.71.102.1.1 MAIN.fbReadTc3Events.LoggedEvents 1031 en_US"
     }
   }
 }

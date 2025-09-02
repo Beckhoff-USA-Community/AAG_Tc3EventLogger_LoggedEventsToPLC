@@ -1,5 +1,43 @@
 <?xml version="1.0"?>
 <TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.18">
+	<Translations>
+		<Text TxtId="Msg Events">
+			<Text LcId="1031"><![CDATA[Msg-Ereignisse]]></Text>
+		</Text>
+		<Text TxtId="This is a verbose Msg {0}">
+			<Text LcId="1031"><![CDATA[Dies ist eine ausführliche Meldung {0}]]></Text>
+		</Text>
+		<Text TxtId="This is a info Msg {0}">
+			<Text LcId="1031"><![CDATA[Dies ist eine Info-Meldung {0}]]></Text>
+		</Text>
+		<Text TxtId="This is a warning Msg {0}">
+			<Text LcId="1031"><![CDATA[Dies ist eine Warnmeldung {0}]]></Text>
+		</Text>
+		<Text TxtId="This is a error Msg {0}">
+			<Text LcId="1031"><![CDATA[Dies ist eine Fehlermeldung {0}]]></Text>
+		</Text>
+		<Text TxtId="This is a critical Msg {0}">
+			<Text LcId="1031"><![CDATA[Dies ist eine wichtige Meldung {0}]]></Text>
+		</Text>
+		<Text TxtId="Alarm Events">
+			<Text LcId="1031"><![CDATA[Alarmereignisse]]></Text>
+		</Text>
+		<Text TxtId="This is a verbose Alarm: {0}">
+			<Text LcId="1031"><![CDATA[Dies ist eine ausführliche Alarmmeldung: {0}]]></Text>
+		</Text>
+		<Text TxtId="This is a info Alarm: {0}">
+			<Text LcId="1031"><![CDATA[Dies ist eine Info-Warnung: {0}]]></Text>
+		</Text>
+		<Text TxtId="This is a warning Alarm: {0}">
+			<Text LcId="1031"><![CDATA[Dies ist eine Warnung Alarm: {0}]]></Text>
+		</Text>
+		<Text TxtId="This is a error Alarm: {0}">
+			<Text LcId="1031"><![CDATA[Dies ist ein Fehleralarm: {0}]]></Text>
+		</Text>
+		<Text TxtId="This is a critical Alarm: {0}">
+			<Text LcId="1031"><![CDATA[Dies ist ein kritischer Alarm: {0}]]></Text>
+		</Text>
+	</Translations>
 	<DataTypes>
 		<DataType>
 			<Name GUID="{64B4D49E-1BD8-462D-9A40-2904237F1837}" PersistentType="true">MsgEvents</Name>
@@ -49,7 +87,56 @@
 			</Hides>
 		</DataType>
 		<DataType>
-			<Name GUID="{850F50BA-341A-44EE-9931-065E635E4F70}" PersistentType="true">AlarmEvents</Name>
+			<Name GUID="{D4074881-4CEE-4A2D-B31C-1E2678588802}" PersistentType="true">MsgEvents</Name>
+			<DisplayName TxtId=""><![CDATA[Msg Events]]></DisplayName>
+			<EventId>
+				<Name Id="1">VerboseMsg</Name>
+				<DisplayName TxtId=""><![CDATA[This is a verbose Msg {0}]]></DisplayName>
+				<Severity>Verbose</Severity>
+			</EventId>
+			<EventId>
+				<Name Id="#x2">InfoMsg</Name>
+				<DisplayName TxtId=""><![CDATA[This is a info Msg {0}]]></DisplayName>
+				<Severity>Info</Severity>
+			</EventId>
+			<EventId>
+				<Name Id="3">WarningMsg</Name>
+				<DisplayName TxtId=""><![CDATA[This is a warning Msg {0}]]></DisplayName>
+				<Severity>Warning</Severity>
+			</EventId>
+			<EventId>
+				<Name Id="4">ErrorMsg</Name>
+				<DisplayName TxtId=""><![CDATA[This is a error Msg {0}]]></DisplayName>
+				<Severity>Error</Severity>
+			</EventId>
+			<EventId>
+				<Name Id="5">CriticalMsg</Name>
+				<DisplayName TxtId=""><![CDATA[This is a critical Msg {0}]]></DisplayName>
+				<Severity>Critical</Severity>
+			</EventId>
+			<Hides>
+				<Hide GUID="{E5CFC7F9-0C0D-4E92-A81F-5E56C9D7D36E}"/>
+				<Hide GUID="{C0C2607B-A945-43DA-8775-2C522AF02D0E}"/>
+				<Hide GUID="{3F48B716-773A-4028-9641-0602A659E5D1}"/>
+				<Hide GUID="{E37B5F83-E34C-458A-871F-DF66EF660E85}"/>
+				<Hide GUID="{F496E05E-E2CD-4204-A84D-B702B29851EB}"/>
+				<Hide GUID="{0E1A97B7-BE62-46AE-B5F4-6B6E53A1848D}"/>
+				<Hide GUID="{29D0497C-69F1-420F-A5BF-6066747E8CFB}"/>
+				<Hide GUID="{1B42A6F8-37C5-4C04-B09B-B11DFB5A1CB0}"/>
+				<Hide GUID="{D4C899D8-3144-4EED-AD1B-A078D3D8E1A9}"/>
+				<Hide GUID="{941CEB1C-F4ED-423D-B52C-587B755A7616}"/>
+				<Hide GUID="{8DCBFD66-EDEF-4F3F-9522-71F538387665}"/>
+				<Hide GUID="{EE31BEF5-6EAE-466E-B758-4E5EFA56BA7C}"/>
+				<Hide GUID="{FC41F9C9-CDAD-4DE0-9DE3-A2B73A5D32C3}"/>
+				<Hide GUID="{CADDBDB2-6348-40A6-B168-F87F51C88735}"/>
+				<Hide GUID="{E77F6B55-37BC-4759-A8F5-E95258AF7FC3}"/>
+				<Hide GUID="{DD44F5C9-B19A-4491-890C-C4BBF301D427}"/>
+				<Hide GUID="{763B23CB-0B62-443B-8A77-8E52ECFB7F54}"/>
+				<Hide GUID="{ADB8BFBD-25FC-47F7-8775-DB050EFA39B3}"/>
+			</Hides>
+		</DataType>
+		<DataType>
+			<Name GUID="{CC934E43-A49D-4F30-ABE2-9196095BA389}" PersistentType="true">AlarmEvents</Name>
 			<DisplayName TxtId=""><![CDATA[Alarm Events]]></DisplayName>
 			<EventId>
 				<Name Id="1">VerboseAlarm</Name>
@@ -105,54 +192,7 @@
 				<Hide GUID="{9138AA28-BE18-40D2-9330-7E299042BCFE}"/>
 				<Hide GUID="{EA7FE878-D46E-4033-B7C6-5E208B710DDD}"/>
 				<Hide GUID="{57EDDF14-F2EC-41C1-A220-4B6B88BB54B6}"/>
-			</Hides>
-		</DataType>
-		<DataType>
-			<Name GUID="{ADB8BFBD-25FC-47F7-8775-DB050EFA39B3}" PersistentType="true">MsgEvents</Name>
-			<DisplayName TxtId=""><![CDATA[Msg Events]]></DisplayName>
-			<EventId>
-				<Name Id="1">VerboseMsg</Name>
-				<DisplayName TxtId=""><![CDATA[This is a verbose Msg {0}]]></DisplayName>
-				<Severity>Verbose</Severity>
-			</EventId>
-			<EventId>
-				<Name Id="#x2">InfoMsg</Name>
-				<DisplayName TxtId=""><![CDATA[This is a info Msg {0}]]></DisplayName>
-				<Severity>Info</Severity>
-			</EventId>
-			<EventId>
-				<Name Id="3">WarningMsg</Name>
-				<DisplayName TxtId=""><![CDATA[This is a warning Msg {0}]]></DisplayName>
-				<Severity>Warning</Severity>
-			</EventId>
-			<EventId>
-				<Name Id="4">ErrorMsg</Name>
-				<DisplayName TxtId=""><![CDATA[This is a error Msg {0}]]></DisplayName>
-				<Severity>Error</Severity>
-			</EventId>
-			<EventId>
-				<Name Id="5">CriticalMsg</Name>
-				<DisplayName TxtId=""><![CDATA[This is a critical Msg {0}]]></DisplayName>
-				<Severity>Critical</Severity>
-			</EventId>
-			<Hides>
-				<Hide GUID="{E5CFC7F9-0C0D-4E92-A81F-5E56C9D7D36E}"/>
-				<Hide GUID="{C0C2607B-A945-43DA-8775-2C522AF02D0E}"/>
-				<Hide GUID="{3F48B716-773A-4028-9641-0602A659E5D1}"/>
-				<Hide GUID="{E37B5F83-E34C-458A-871F-DF66EF660E85}"/>
-				<Hide GUID="{F496E05E-E2CD-4204-A84D-B702B29851EB}"/>
-				<Hide GUID="{0E1A97B7-BE62-46AE-B5F4-6B6E53A1848D}"/>
-				<Hide GUID="{29D0497C-69F1-420F-A5BF-6066747E8CFB}"/>
-				<Hide GUID="{1B42A6F8-37C5-4C04-B09B-B11DFB5A1CB0}"/>
-				<Hide GUID="{D4C899D8-3144-4EED-AD1B-A078D3D8E1A9}"/>
-				<Hide GUID="{941CEB1C-F4ED-423D-B52C-587B755A7616}"/>
-				<Hide GUID="{8DCBFD66-EDEF-4F3F-9522-71F538387665}"/>
-				<Hide GUID="{EE31BEF5-6EAE-466E-B758-4E5EFA56BA7C}"/>
-				<Hide GUID="{FC41F9C9-CDAD-4DE0-9DE3-A2B73A5D32C3}"/>
-				<Hide GUID="{CADDBDB2-6348-40A6-B168-F87F51C88735}"/>
-				<Hide GUID="{E77F6B55-37BC-4759-A8F5-E95258AF7FC3}"/>
-				<Hide GUID="{DD44F5C9-B19A-4491-890C-C4BBF301D427}"/>
-				<Hide GUID="{763B23CB-0B62-443B-8A77-8E52ECFB7F54}"/>
+				<Hide GUID="{850F50BA-341A-44EE-9931-065E635E4F70}"/>
 			</Hides>
 		</DataType>
 	</DataTypes>

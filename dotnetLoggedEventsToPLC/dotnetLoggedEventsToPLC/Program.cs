@@ -11,15 +11,33 @@ using TwinCAT.TypeSystem;
 
 
 // Validate command line arguments
-if (args.Length != 2)
+if (args.Length != 4)
 {
-    Console.WriteLine("Usage: dotnetLoggedEventsToPLC <AMS_NetID> <PLC_Array_Symbol_Path>");
-    Console.WriteLine("Example: dotnetLoggedEventsToPLC 39.120.71.102.1.1 MAIN.fbReadTc3Events.LoggedEvents");
+    Console.WriteLine("Usage: dotnetLoggedEventsToPLC <AMS_NetID> <PLC_Array_Symbol_Path> <Language_ID> <DateTimeFormat>");
+    Console.WriteLine("Example: dotnetLoggedEventsToPLC 39.120.71.102.1.1 MAIN.fbReadTc3Events.LoggedEvents 1033 en_US");
+    Console.WriteLine("Language ID: 1033=English, 1031=German, 2057=English(UK)");
+    Console.WriteLine("DateTime Format: de_DE, en_GB, en_US");
     return 1;
 }
 
 string amsNetId = args[0];
 string plcSymbolPath = args[1];
+string languageIdStr = args[2];
+string dateTimeFormat = args[3];
+
+// Parse and validate language ID
+if (!uint.TryParse(languageIdStr, out uint languageId))
+{
+    Console.WriteLine($"Error: Invalid language ID '{languageIdStr}'. Must be a number (e.g., 1033 for English)");
+    return 1;
+}
+
+// Validate date/time format
+if (dateTimeFormat != "de_DE" && dateTimeFormat != "en_GB" && dateTimeFormat != "en_US")
+{
+    Console.WriteLine($"Error: Invalid DateTime format '{dateTimeFormat}'. Must be one of: de_DE, en_GB, en_US");
+    return 1;
+}
 
 // Validate symbol path format
 if (string.IsNullOrWhiteSpace(plcSymbolPath) || !plcSymbolPath.Contains('.'))
@@ -78,7 +96,7 @@ try
         Console.WriteLine($"Error: Failed to read array dimensions from PLC symbol: {ex.Message}");
         return 1;
     }
-    
+
     // Get logged events limited to array size
     ITcLoggedEventCollection tcLoggedEvents = logger.GetLoggedEvents((uint)arraySize);
     
@@ -96,7 +114,7 @@ try
             // Map basic properties using WSTRING byte arrays
             string sourceWithPrefix = $"Source: {tcLoggedEvent.SourceName ?? ""}";
             plcEvent.sSource = ST_ReadEventW.StringToWString(sourceWithPrefix, 256);
-            plcEvent.sMessageText = ST_ReadEventW.StringToWString(tcLoggedEvent.GetText(CultureInfo.CurrentCulture.LCID) ?? "", 256);
+            plcEvent.sMessageText = ST_ReadEventW.StringToWString(tcLoggedEvent.GetText((int)languageId) ?? "", 256);
             
             // Determine event type and set nClass accordingly
             string eventTypeStr = tcLoggedEvent.EventType.ToString();
@@ -114,12 +132,31 @@ try
             // Get severity
             string severity = tcLoggedEvent.SeverityLevel.ToString();
             // Get class name
-            string className = tcLoggedEvent.GetEventClassName(CultureInfo.CurrentCulture.LCID);//eventTypeStr;
+            string className = tcLoggedEvent.GetEventClassName((int)languageId);
 
-            // Get timestamp from FileTimeRaised property
+            // Get timestamp from FileTimeRaised property and format based on locale
             DateTime eventTime = DateTime.FromFileTime(tcLoggedEvent.FileTimeRaised);
-            plcEvent.sDate = ST_ReadEventW.StringToWString(eventTime.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture), 24);
-            plcEvent.sTime = ST_ReadEventW.StringToWString(eventTime.ToString("h:mm:ss tt", CultureInfo.InvariantCulture), 24);
+            string dateFormat, timeFormat;
+            
+            switch (dateTimeFormat)
+            {
+                case "de_DE":
+                    dateFormat = "dd.MM.yyyy";
+                    timeFormat = "HH:mm:ss";
+                    break;
+                case "en_GB":
+                    dateFormat = "dd/MM/yyyy";
+                    timeFormat = "HH:mm:ss";
+                    break;
+                case "en_US":
+                default:
+                    dateFormat = "MM/dd/yyyy";
+                    timeFormat = "h:mm:ss tt";
+                    break;
+            }
+            
+            plcEvent.sDate = ST_ReadEventW.StringToWString(eventTime.ToString(dateFormat, CultureInfo.InvariantCulture), 24);
+            plcEvent.sTime = ST_ReadEventW.StringToWString(eventTime.ToString(timeFormat, CultureInfo.InvariantCulture), 24);
             
             // Set nConfirmState based on WithConfirmation and ConfirmationState
             if (!tcLoggedEvent.WithConfirmation)
