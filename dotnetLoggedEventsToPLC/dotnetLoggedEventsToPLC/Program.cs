@@ -71,24 +71,55 @@ static void ValidateArguments(Options options)
     {
         throw new ArgumentException("Invalid PLC symbol path format. Expected format: MAIN.Variable or GVL.FB.Sub.Variable");
     }
+    
+    // Validate AMS Net ID format (should contain at least 6 parts and optionally a port)
+    if (string.IsNullOrWhiteSpace(options.AmsNetId))
+    {
+        throw new ArgumentException("AMS Net ID cannot be empty");
+    }
+    
+    string[] parts = options.AmsNetId.Split(':');
+    if (parts.Length != 2)
+    {
+        throw new ArgumentException("Invalid AMS Net ID format. Expected format: 192.168.1.100.1.1:851");
+    }
+    
+    // Validate the AMS Net ID part (before colon)
+    string amsNetIdPart = parts[0];
+    string[] amsIdParts = amsNetIdPart.Split('.');
+    if (amsIdParts.Length != 6)
+    {
+        throw new ArgumentException("Invalid AMS Net ID format. Expected format: 192.168.1.100.1.1:851");
+    }
+    
+    // Validate port
+    if (!int.TryParse(parts[1], out int port) || port <= 0 || port > 65535)
+    {
+        throw new ArgumentException("Invalid port number. Port must be between 1 and 65535");
+    }
 }
 
 // ============================================================================
 // PLC CONNECTION AND SYMBOL VALIDATION
 // ============================================================================
 
-static (TcEventLogger logger, AdsClient adsClient) ConnectToSystems(string amsNetId)
+static (TcEventLogger logger, AdsClient adsClient) ConnectToSystems(string amsNetIdWithPort)
 {
     var logger = new TcEventLogger();
     var adsClient = new AdsClient();
     
     try
     {
-        // Connect to the event logger
+        // Parse AMS Net ID and port
+        string[] parts = amsNetIdWithPort.Split(':');
+        string amsNetId = parts[0];
+        int port = int.Parse(parts[1]);
+        
+        // Connect to the event logger (uses just the AMS Net ID)
         logger.Connect(amsNetId);
         
-        // Connect to PLC via ADS
-        adsClient.Connect(amsNetId, 851); // Port 851 for PLC Runtime
+        // Connect to PLC via ADS (uses AMS Net ID and port)
+        adsClient.Connect(amsNetId, port);
         
         return (logger, adsClient);
     }
@@ -424,7 +455,7 @@ public enum E_DateAndTimeFormat
 // Command line options class for ReadTc3Events2
 public class Options
 {
-    [Option("amsnetid", Required = true, HelpText = "TwinCAT AMS Net ID (e.g., 39.120.71.102.1.1)")]
+    [Option("amsnetid", Required = true, HelpText = "TwinCAT AMS Net ID port (e.g., 39.120.71.102.1.1:851)")]
     public string AmsNetId { get; set; } = string.Empty;
 
     [Option("symbolpath", Required = true, HelpText = "Full path to LoggedEvents array in PLC (e.g., MAIN.fbReadTc3Events.LoggedEvents)")]

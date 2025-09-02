@@ -2,15 +2,15 @@
   "profiles": {
     "ReadTc3Events2 (English)": {
       "commandName": "Project",
-      "commandLineArgs": "--amsnetid 39.120.71.102.1.1 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2"
+      "commandLineArgs": "--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2"
     },
     "ReadTc3Events2 (German)": {
       "commandName": "Project",
-      "commandLineArgs": "--amsnetid 39.120.71.102.1.1 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0"
+      "commandLineArgs": "--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0"
     },
     "ReadTc3Events2 (English UK)": {
       "commandName": "Project", 
-      "commandLineArgs": "--amsnetid 39.120.71.102.1.1 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 2057 --datetimeformat 1"
+      "commandLineArgs": "--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 2057 --datetimeformat 1"
     }
   }
 }
