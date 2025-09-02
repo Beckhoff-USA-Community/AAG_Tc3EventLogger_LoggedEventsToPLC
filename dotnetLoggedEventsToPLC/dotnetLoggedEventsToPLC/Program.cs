@@ -88,6 +88,7 @@ static (TcEventLogger logger, AdsClient adsClient) ConnectToSystems(string amsNe
     catch
     {
         logger?.Disconnect();
+        logger?.Dispose();
         adsClient?.Disconnect();
         adsClient?.Dispose();
         throw;
@@ -351,6 +352,7 @@ static ST_ReadEventW CreateEmptyEvent()
 static void CleanupConnections(TcEventLogger? logger, AdsClient? adsClient)
 {
     logger?.Disconnect();
+    logger?.Dispose();
     adsClient?.Disconnect();
     adsClient?.Dispose();
 
