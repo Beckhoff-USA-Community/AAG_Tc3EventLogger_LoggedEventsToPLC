@@ -2,19 +2,9 @@
 <TcPlcObject Version="1.1.0.1">
   <POU Name="MAIN" Id="{8e279f0e-7f0a-4414-b3f0-94b367b48d58}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
-VAR
-	Msg			  : ARRAY[1..5] OF FB_TcMessage;
-	Alarm		  : ARRAY[1..5] OF FB_TcAlarm;
-	i			  : INT;
-	Init		  : BOOL := TRUE;
-	RaiseAlarms	  : BOOL := FALSE;
-	SendMsgs	  : BOOL := FALSE;
-	ClearAlarms	  : BOOL := FALSE;
-	ConfirmAlarms : BOOL := FALSE;
-	Cnt			  : UDINT;
-
+VAR	
 	// FB_ReadTc3Events
-	fbReadTc3Events	   : FB_ReadTc3Events2; //FB_ReadTc3Events;
+	fbReadTc3Events	   : FB_ReadTc3Events2;
 	bReadEvents		   : BOOL							   := TRUE;
 	nLanguage		   : DINT							   := 1033;
 	eDateAndTimeFormat : Tc2_Utilities.E_DateAndTimeFormat := Tc2_Utilities.E_DateAndTimeFormat.en_US;
@@ -23,16 +13,6 @@ VAR
 	bError			   : BOOL;
 	hr				   : HRESULT;
 	numOfEvents		   : UDINT;
-	LoggedEvents	   : ARRAY[1..200] OF ST_ReadEventW;
-	ResetData		   : BOOL;
-
-	//One alarm
-	RaiseOneAlarm	: BOOL;
-	ClearOneAlarm	: BOOL;
-	ClearWithTrue	: BOOL;
-	ConfirmOneAlarm : BOOL;
-	Index			: INT := 1;
-	SendOneMsg		: BOOL;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// Call fbReadTc3Events
@@ -40,94 +20,12 @@ fbReadTc3Events(bReadEvents		   := bReadEvents,
 				nLanguageID		   := nLanguage,
 				eDateAndTimeFormat := eDateAndTimeFormat,
 				bClearTable		   := bClearDisplay,
-				eMinSeverity	   := eSeverityMin, // Set event filter for severity via input (filter possibility two)
+				eMinSeverity	   := eSeverityMin,
 				nNumberOfEvents	   => numOfEvents,
 				bError			   => bError,
 				hrErrorCode		   => hr);
 
-bClearDisplay := FALSE;
-IF Init THEN
-	Init := FALSE;
-
-	//Messages
-	Msg[1].CreateEx(stEventEntry := TC_EVENTS.MsgEvents.VerboseMsg);
-	Msg[2].CreateEx(stEventEntry := TC_EVENTS.MsgEvents.InfoMsg);
-	Msg[3].CreateEx(stEventEntry := TC_EVENTS.MsgEvents.WarningMsg);
-	Msg[4].CreateEx(stEventEntry := TC_EVENTS.MsgEvents.ErrorMsg);
-	Msg[5].CreateEx(stEventEntry := TC_EVENTS.MsgEvents.CriticalMsg);
-
-	//Alarms
-	Alarm[1].CreateEx(stEventEntry := TC_EVENTS.AlarmEvents.VerboseAlarm, bWithConfirmation := TRUE);
-	Alarm[2].CreateEx(stEventEntry := TC_EVENTS.AlarmEvents.InfoAlarm, bWithConfirmation := TRUE);
-	Alarm[3].CreateEx(stEventEntry := TC_EVENTS.AlarmEvents.WarningAlarm, bWithConfirmation := FALSE);
-	Alarm[4].CreateEx(stEventEntry := TC_EVENTS.AlarmEvents.ErrorAlarm, bWithConfirmation := FALSE);
-	Alarm[5].CreateEx(stEventEntry := TC_EVENTS.AlarmEvents.CriticalAlarm, bWithConfirmation := FALSE);
-END_IF
-
-IF ResetData THEN
-	bClearDisplay := TRUE;
-	ResetData	  := FALSE;
-	MEMSET(ADR(LoggedEvents), 0, SIZEOF(LoggedEvents));
-END_IF
-
-IF RaiseAlarms THEN
-	RaiseAlarms := FALSE;
-	Cnt			:= Cnt + 1;
-	FOR i := 1 TO 5 DO
-		Alarm[i].ipArguments.Clear().AddUDInt(Cnt);
-		Alarm[i].Raise();
-	END_FOR
-END_IF
-
-IF SendMsgs THEN
-	SendMsgs := FALSE;
-	Cnt		 := Cnt + 1;
-	FOR i := 1 TO 5 DO
-		Msg[i].ipArguments.Clear().AddUDInt(Cnt);
-		Msg[i].Send();
-	END_FOR
-END_IF
-
-IF ConfirmAlarms THEN
-	ConfirmAlarms := FALSE;
-	FOR i := 1 TO 5 DO
-		Alarm[i].Confirm();
-	END_FOR
-END_IF
-
-IF ClearAlarms THEN
-	ClearAlarms := FALSE;
-	FOR i := 1 TO 5 DO
-		Alarm[i].Clear();
-	END_FOR
-END_IF
-
-IF RaiseOneAlarm THEN
-	RaiseOneAlarm := FALSE;
-	Alarm[Index].ipArguments.Clear().AddUDInt(Cnt);
-	Alarm[Index].Raise();
-END_IF
-
-IF ClearOneAlarm THEN
-	ClearOneAlarm := FALSE;
-	Alarm[Index].Clear();
-END_IF
-
-IF ClearWithTrue THEN
-	ClearWithTrue := FALSE;
-	Alarm[Index].Clear(0, TRUE);
-END_IF
-
-IF ConfirmOneAlarm THEN
-	ConfirmOneAlarm := FALSE;
-	Alarm[Index].Confirm();
-END_IF
-
-IF SendOneMsg THEN
-	SendOneMsg := FALSE;
-	Msg[Index].ipArguments.Clear().AddUDInt(Cnt);
-	Msg[Index].Send();
-END_IF]]></ST>
+bClearDisplay := FALSE;]]></ST>
     </Implementation>
   </POU>
 </TcPlcObject>
