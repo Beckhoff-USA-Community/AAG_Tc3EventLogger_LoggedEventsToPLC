@@ -32,9 +32,18 @@ This repository contains a proof-of-concept integration between TwinCAT Event Lo
 
 **Build the application:**
 ```bash
+# Development build
 cd dotnetLoggedEventsToPLC/ReadTc3Events2
 dotnet build
+
+# Multi-platform deployment build
+cd dotnetLoggedEventsToPLC
+build.bat
 ```
+
+**Build Script Output:**
+- `publish-freebsd/ReadTc3Events2/` - Framework-dependent build for TwinCAT/BSD (FreeBSD)
+- `publish-win-x64/ReadTc3Events2/` - Self-contained executable for Windows
 
 **Run the application:**
 ```bash
@@ -46,7 +55,21 @@ dotnet run -- --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 -
 dotnet run -- --amsnetid <AMS_NET_ID>:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2
 ```
 
-**Example runs (from launchSettings.json):**
+**Deployment Examples:**
+
+*TwinCAT/BSD (FreeBSD):*
+```bash
+# Copy publish-freebsd/ReadTc3Events2/ folder to target, then run:
+dotnet ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2
+```
+
+*Windows:*
+```bash
+# Copy publish-win-x64/ReadTc3Events2/ folder to target, then run:
+ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2
+```
+
+**Development runs (from launchSettings.json):**
 - Local English: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2`
 - Local German: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0`
 - Remote: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2`

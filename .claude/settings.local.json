@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet build)"
+      "Bash(dotnet build)",
+      "Bash(build.bat)",
+      "Bash(cmd /c:*)",
+      "Bash(./build.bat)"
     ],
     "deny": [],
     "ask": []
