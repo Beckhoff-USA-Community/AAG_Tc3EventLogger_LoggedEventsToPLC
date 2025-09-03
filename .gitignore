@@ -98,6 +98,7 @@ dotnetLoggedEventsToPLC/Packages/
 
 # Build artifacts - users should compile their own
 dotnetLoggedEventsToPLC/publish-*/
+build-artifacts/
 
 TwinCAT Project Event Generator/TwinCAT Project Event Generator/_Config/PLC1/PLC1 Instance.xtv
 

@@ -4,7 +4,10 @@
       "Bash(dotnet build)",
       "Bash(build.bat)",
       "Bash(cmd /c:*)",
-      "Bash(./build.bat)"
+      "Bash(./build.bat)",
+      "Bash(powershell:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet publish:*)"
     ],
     "deny": [],
     "ask": []

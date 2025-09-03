@@ -31,19 +31,31 @@ This repository contains a proof-of-concept integration between TwinCAT Event Lo
 ### .NET Application
 
 **Build the application:**
-```bash
+```powershell
 # Development build
 cd dotnetLoggedEventsToPLC/ReadTc3Events2
 dotnet build
 
-# Multi-platform deployment build
+# Multi-platform deployment build (PowerShell - Recommended)
+.\build.ps1
+
+# Legacy batch file (deprecated)  
 cd dotnetLoggedEventsToPLC
-build.bat
+.\build.bat
+```
+
+**PowerShell Build Script Options:**
+```powershell
+.\build.ps1                    # Build everything (.NET + PLC library)
+.\build.ps1 -SkipDotNet        # Only build PLC library
+.\build.ps1 -SkipPlcLibrary    # Only build .NET applications  
+.\build.ps1 -InstallLibrary    # Build and install PLC library to TwinCAT repository
 ```
 
 **Build Script Output:**
-- `publish-freebsd/ReadTc3Events2/` - Framework-dependent build for TwinCAT/BSD (FreeBSD)
-- `publish-win-x64/ReadTc3Events2/` - Self-contained executable for Windows
+- `build-artifacts/freebsd/ReadTc3Events2/` - Framework-dependent build for TwinCAT/BSD (FreeBSD)
+- `build-artifacts/windows/ReadTc3Events2/` - Self-contained executable for Windows
+- `build-artifacts/plc-library/LoggedEventsToPLCLib.library` - TwinCAT PLC library
 
 **Run the application:**
 ```bash
@@ -59,13 +71,13 @@ dotnet run -- --amsnetid <AMS_NET_ID>:851 --symbolpath MAIN.fbReadTc3Events.Logg
 
 *TwinCAT/BSD (FreeBSD):*
 ```bash
-# Copy publish-freebsd/ReadTc3Events2/ folder to target, then run:
+# Copy build-artifacts/freebsd/ReadTc3Events2/ folder to target, then run:
 dotnet ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2
 ```
 
 *Windows:*
 ```bash
-# Copy publish-win-x64/ReadTc3Events2/ folder to target, then run:
+# Copy build-artifacts/windows/ReadTc3Events2/ folder to target, then run:
 ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2
 ```
 
@@ -82,6 +94,17 @@ ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1
 # Open the solution file in TwinCAT XAE
 TwinCATLoggedEventsToPLC/FB_ReadTc3Events2.sln
 ```
+
+**Using the PLC Library:**
+1. **Import Library**: In TwinCAT XAE, right-click References > Add Library > Browse to `build-artifacts/plc-library/LoggedEventsToPLCLib.library`
+2. **Add Function Block**: Declare `fbReadTc3Events : FB_ReadTc3Events2;` in your program
+3. **Call Method**: Use `fbReadTc3Events.ReadLoggedEvents(bExec);` to trigger event reading
+4. **Access Events**: Read events from `fbReadTc3Events.LoggedEvents` array
+
+**Library Contents:**
+- `FB_ReadTc3Events2` - Main function block that calls the .NET application
+- `ST_ReadEventW` - Event structure matching .NET application format
+- Automatic path detection for Windows vs TwinCAT/BSD deployment
 
 ## Key Data Structures
 
