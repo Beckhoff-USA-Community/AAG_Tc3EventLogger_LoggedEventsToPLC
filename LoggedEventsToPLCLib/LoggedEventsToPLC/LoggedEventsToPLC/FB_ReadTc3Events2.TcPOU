@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1">
-  <POU Name="FB_ReadTc3Events2" Id="{5a6edfd8-5abe-4422-80aa-514948601d1b}" SpecialFunc="None">
+  <POU Name="FB_ReadTc3Events2" Id="{01587a58-31a5-42fd-8251-f61e09cebdf0}" SpecialFunc="None">
     <Declaration><![CDATA[{attribute 'reflection'}
 FUNCTION_BLOCK FB_ReadTc3Events2 EXTENDS FB_ReadTc3Events
 VAR_INPUT
@@ -12,16 +12,15 @@ VAR_OUTPUT
 END_VAR
 
 VAR
+	Init	   : BOOL := TRUE;
+	DeviceInfo : FB_GetDeviceIdentificationEx;
 	{attribute 'instance-path'}
 	{attribute 'noinit'}
 	sPath			   : T_MAXSTRING;
 	CallReadTc3Events2 : NT_StartProcess;
-	DeviceInfo		   : FB_GetDeviceIdentificationEx;
-	Init			   : BOOL := TRUE;
 	fbArgsFormat	   : FB_FormatString2;
 	ReadTc3Events2Args : T_MAXSTRING;
-	
-	
+
 	//Win32Events		   : FB_TcMessage;
 END_VAR
 
@@ -51,7 +50,7 @@ END_IF
 
 CallReadTc3Events2(NETID := '', COMNDLINE := ReadTc3Events2Args);]]></ST>
     </Implementation>
-    <Method Name="FB_Init" Id="{518a7732-9a1b-4fc5-8f94-24f44370f21e}">
+    <Method Name="FB_Init" Id="{84d1edc6-2bb3-4104-a74a-666444e82c6e}">
       <Declaration><![CDATA[//FB_Init is always available implicitly and it is used primarily for initialization.
 
 //The return value is not evaluated. For a specific influence, you can also declare the
@@ -79,40 +78,36 @@ END_VAR]]></Declaration>
         <ST><![CDATA[//Win32Events.CreateEx(TC_EVENTS.Win32EventClass.ERROR_SUCCESS,0); /
 
 //Use the Win32EventClass - so event logger knows about Win32EventClass GUID. Used by the dotnet application
+{attribute 'analysis' := '-139'}
 TC_EVENTS.Win32EventClass;
 
-
 //Trim the project name, and PLC name from the function block instance path
+
 // Find first dot
 nFirstPos := FIND2(ADR(sPath), ADR(sDot));
-
 IF nFirstPos > 0 THEN
-    // Find second dot by searching from just after the first one
-    nSecondPosRel := FIND2(ADR(sPath) + nFirstPos, ADR(sDot));
+	// Find second dot by searching from just after the first one
+	nSecondPosRel := FIND2(ADR(sPath) + nFirstPos, ADR(sDot));
+	IF nSecondPosRel > 0 THEN
+		// Convert relative position to absolute (1-based indexing)
+		nSecondPosAbs := nFirstPos + nSecondPosRel;
 
-    IF nSecondPosRel > 0 THEN
-        // Convert relative position to absolute (1-based indexing)
-        nSecondPosAbs := nFirstPos + nSecondPosRel;
+		// Remove everything from start through the second dot
+		nRemoveLen := nSecondPosAbs;
+		bOk		   := REPLACE2(pSrcString	 := ADR(sPath),
+							   pInsertString := ADR(sEmpty),
+							   pDstString	 := ADR(sTmpOut),
+							   nDstSize		 := SIZEOF(sTmpOut),
+							   nLen			 := nRemoveLen,
+							   nPos			 := 1);
 
-        // Remove everything from start through the second dot
-        nRemoveLen := nSecondPosAbs;
-
-        bOk := REPLACE2(
-            pSrcString    := ADR(sPath),
-            pInsertString := ADR(sEmpty),
-            pDstString    := ADR(sTmpOut),
-            nDstSize      := SIZEOF(sTmpOut),
-            nLen          := nRemoveLen,
-            nPos          := 1
-        );
-
-        // Overwrite sPath with the result (even if truncated)
-        sPath := CONCAT(sTmpOut,'.LoggedEvents');
-    END_IF
+		// Overwrite sPath with the result (even if truncated)
+		sPath := CONCAT(sTmpOut, '.LoggedEvents');
+	END_IF
 END_IF]]></ST>
       </Implementation>
     </Method>
-    <Method Name="ReadLoggedEvents" Id="{936688d8-92ba-4ae8-8c66-ec3f8ec0b489}">
+    <Method Name="ReadLoggedEvents" Id="{2c2cea63-0b0b-4053-946e-4b8677152532}">
       <Declaration><![CDATA[//A rising edge on the input parameter bExec triggers the Read procedure. 
 
 //The asynchronous process is terminated as soon as the reference bExec is set back to FALSE from the method. 

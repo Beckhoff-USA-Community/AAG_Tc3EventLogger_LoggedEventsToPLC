@@ -3,105 +3,49 @@
   <PropertyGroup>
     <FileVersion>1.0.0.0</FileVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{b2984745-5911-4e6d-80e4-bdca2bae9289}</ProjectGuid>
+    <ProjectGuid>{85fad308-09ae-45ea-a7da-85fbf14f6701}</ProjectGuid>
     <SubObjectsSortedByName>true</SubObjectsSortedByName>
     <DownloadApplicationInfo>true</DownloadApplicationInfo>
     <WriteProductVersion>false</WriteProductVersion>
     <GenerateTpy>false</GenerateTpy>
-    <Name>PLC1</Name>
+    <Name>LoggedEventsToPLC</Name>
     <ProgramVersion>3.1.4026.18</ProgramVersion>
-    <Application>{c637e171-2c0c-4e20-9c8a-210185260f6f}</Application>
-    <TypeSystem>{c6fa013d-e051-48c2-91a3-29574d11c1bc}</TypeSystem>
-    <Implicit_Task_Info>{a1d5e336-b398-4650-ad2e-4e59af974a95}</Implicit_Task_Info>
-    <Implicit_KindOfTask>{58d14f61-2baa-4d47-8fb3-231d029327ce}</Implicit_KindOfTask>
-    <Implicit_Jitter_Distribution>{622db63d-76a2-45f6-bdb9-b808fcbf592a}</Implicit_Jitter_Distribution>
-    <LibraryReferences>{5953cedc-fc65-48fa-a99b-6007584e5483}</LibraryReferences>
-    <CompilerDefines>VISU_USEPROPERTYINFO</CompilerDefines>
+    <Application>{3f33d0d8-6438-4504-8151-7c42cd8914bd}</Application>
+    <TypeSystem>{f44b2fb2-191c-47d5-86b4-1c8b37fa4b2b}</TypeSystem>
+    <Implicit_Task_Info>{c3c3af86-4c77-44a5-a465-b97609289647}</Implicit_Task_Info>
+    <Implicit_KindOfTask>{1d1e4825-3411-48aa-8708-3a9dd5e1e2b4}</Implicit_KindOfTask>
+    <Implicit_Jitter_Distribution>{1294f68f-ee15-42b5-a181-511264688466}</Implicit_Jitter_Distribution>
+    <LibraryReferences>{df2f0bf9-26f7-45ee-b713-42d47b77a0df}</LibraryReferences>
+    <Company>Beckhoff Automation LLC.</Company>
     <Released>false</Released>
+    <Title>LoggedEventsToPLC</Title>
+    <ProjectVersion>0.0.0.1</ProjectVersion>
+    <LibraryCategories>
+      <LibraryCategory xmlns="">
+        <Id>{d77c10e0-9dc6-46ed-bea1-c259418a1863}</Id>
+        <Version>1.0.0.0</Version>
+        <DefaultName>System</DefaultName>
+      </LibraryCategory>
+    </LibraryCategories>
+    <SelectedLibraryCategories>
+      <Id xmlns="">{d77c10e0-9dc6-46ed-bea1-c259418a1863}</Id>
+    </SelectedLibraryCategories>
+    <VirtualLibrary>true</VirtualLibrary>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="GlobalTextList.TcGTLO">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PlcTask.TcTTO">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="POUs\MAIN.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="POUs\PRG_GenerateEvents.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Visualization Manager.TcVMO">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="VISUs\Visualization.TcVIS">
-      <SubType>Code</SubType>
-      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
-    </Compile>
-    <Compile Include="VISU_TASK.TcTTO">
+    <Folder Include="LoggedEventsToPLC" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="LoggedEventsToPLC\FB_ReadTc3Events2.TcPOU">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DUTs" />
-    <Folder Include="GVLs" />
-    <Folder Include="VISUs" />
-    <Folder Include="POUs" />
+    <None Include="LoggedEventsToPLC.tmc">
+      <SubType>Content</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <PlaceholderReference Include="LoggedEventsToPLC">
-      <DefaultResolution>[LoggedEventsToPLC], * (Beckhoff Automation LLC.)</DefaultResolution>
-      <Namespace>LoggedEventsToPLC</Namespace>
-    </PlaceholderReference>
-    <PlaceholderReference Include="System_VisuElemEventTable">
-      <DefaultResolution>VisuElemEventTable, 1.0.4.2 (System)</DefaultResolution>
-      <Namespace>VisuElemEventTable</Namespace>
-      <SystemLibrary>true</SystemLibrary>
-      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
-    </PlaceholderReference>
-    <PlaceholderReference Include="System_VisuElemMeter">
-      <DefaultResolution>VisuElemMeter, 4.7.0.0 (System)</DefaultResolution>
-      <Namespace>VisuElemMeter</Namespace>
-      <SystemLibrary>true</SystemLibrary>
-      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
-    </PlaceholderReference>
-    <PlaceholderReference Include="System_VisuElems">
-      <DefaultResolution>VisuElems, 4.8.0.0 (System)</DefaultResolution>
-      <Namespace>VisuElems</Namespace>
-      <SystemLibrary>true</SystemLibrary>
-      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
-    </PlaceholderReference>
-    <PlaceholderReference Include="System_VisuElemsSpecialControls">
-      <DefaultResolution>VisuElemsSpecialControls, 4.7.0.0 (System)</DefaultResolution>
-      <Namespace>VisuElemsSpecialControls</Namespace>
-      <SystemLibrary>true</SystemLibrary>
-      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
-    </PlaceholderReference>
-    <PlaceholderReference Include="System_VisuElemsWinControls">
-      <DefaultResolution>VisuElemsWinControls, 4.8.0.0 (System)</DefaultResolution>
-      <Namespace>VisuElemsWinControls</Namespace>
-      <SystemLibrary>true</SystemLibrary>
-      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
-    </PlaceholderReference>
-    <PlaceholderReference Include="System_VisuElemTextEditor">
-      <DefaultResolution>VisuElemTextEditor, 4.8.0.0 (System)</DefaultResolution>
-      <Namespace>VisuElemTextEditor</Namespace>
-      <SystemLibrary>true</SystemLibrary>
-      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
-    </PlaceholderReference>
-    <PlaceholderReference Include="System_VisuInputs">
-      <DefaultResolution>VisuInputs, 4.7.0.0 (System)</DefaultResolution>
-      <Namespace>VisuInputs</Namespace>
-      <SystemLibrary>true</SystemLibrary>
-      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
-    </PlaceholderReference>
-    <PlaceholderReference Include="System_VisuNativeControl">
-      <DefaultResolution>VisuNativeControl, 4.8.0.0 (System)</DefaultResolution>
-      <Namespace>VisuNativeControl</Namespace>
-      <SystemLibrary>true</SystemLibrary>
-      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
-    </PlaceholderReference>
     <PlaceholderReference Include="Tc2_Standard">
       <DefaultResolution>Tc2_Standard, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc2_Standard</Namespace>
@@ -114,57 +58,16 @@
       <DefaultResolution>Tc2_Utilities, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc2_Utilities</Namespace>
     </PlaceholderReference>
-    <PlaceholderReference Include="Tc3_EventLogger">
-      <DefaultResolution>Tc3_EventLogger, * (Beckhoff Automation GmbH)</DefaultResolution>
-      <Namespace>Tc3_EventLogger</Namespace>
-    </PlaceholderReference>
-    <PlaceholderReference Include="Tc3_Module">
-      <DefaultResolution>Tc3_Module, * (Beckhoff Automation GmbH)</DefaultResolution>
-      <Namespace>Tc3_Module</Namespace>
-      <SystemLibrary>true</SystemLibrary>
-    </PlaceholderReference>
     <PlaceholderReference Include="VisuElemEventTable">
       <DefaultResolution>VisuElemEventTable, * (System)</DefaultResolution>
       <Namespace>VisuElemEventTable</Namespace>
     </PlaceholderReference>
-    <PlaceholderReference Include="VisuSymbols">
-      <DefaultResolution>VisuSymbols, 4.5.0.0 (System)</DefaultResolution>
-      <Namespace>VisuSymbols</Namespace>
-    </PlaceholderReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="PLC1.tmc">
-      <SubType>Content</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <PlaceholderResolution Include="System_VisuElemBase">
-      <Resolution>VisuElemBase, * (System)</Resolution>
-    </PlaceholderResolution>
-    <PlaceholderResolution Include="System_VisuElemMeter">
-      <Resolution>VisuElemMeter, * (System)</Resolution>
-    </PlaceholderResolution>
-    <PlaceholderResolution Include="System_VisuElems">
-      <Resolution>VisuElems, * (System)</Resolution>
-    </PlaceholderResolution>
-    <PlaceholderResolution Include="System_VisuElemsSpecialControls">
-      <Resolution>VisuElemsSpecialControls, * (System)</Resolution>
-    </PlaceholderResolution>
-    <PlaceholderResolution Include="System_VisuElemsWinControls">
-      <Resolution>VisuElemsWinControls, * (System)</Resolution>
-    </PlaceholderResolution>
-    <PlaceholderResolution Include="System_VisuElemTextEditor">
-      <Resolution>VisuElemTextEditor, * (System)</Resolution>
-    </PlaceholderResolution>
-    <PlaceholderResolution Include="System_VisuNativeControl">
-      <Resolution>VisuNativeControl, * (System)</Resolution>
-    </PlaceholderResolution>
   </ItemGroup>
   <ProjectExtensions>
     <PlcProjectOptions>
       <XmlArchive>
-        <Data>
-          <o xml:space="preserve" t="OptionKey">
+  <Data>
+    <o xml:space="preserve" t="OptionKey">
       <v n="Name">"&lt;ProjectRoot&gt;"</v>
       <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
         <v>{192FAD59-8248-4824-A8DE-9177C94C195A}</v>
@@ -256,15 +159,15 @@
       </d>
       <d n="Values" t="Hashtable" />
     </o>
-        </Data>
-        <TypeList>
-          <Type n="Boolean">System.Boolean</Type>
-          <Type n="Hashtable">System.Collections.Hashtable</Type>
-          <Type n="Int32">System.Int32</Type>
-          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
-          <Type n="String">System.String</Type>
-        </TypeList>
-      </XmlArchive>
+  </Data>
+  <TypeList>
+    <Type n="Boolean">System.Boolean</Type>
+    <Type n="Hashtable">System.Collections.Hashtable</Type>
+    <Type n="Int32">System.Int32</Type>
+    <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+    <Type n="String">System.String</Type>
+  </TypeList>
+</XmlArchive>
     </PlcProjectOptions>
   </ProjectExtensions>
 </Project>
