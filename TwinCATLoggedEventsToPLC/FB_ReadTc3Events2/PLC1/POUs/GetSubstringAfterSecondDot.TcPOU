@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="GetSubstringAfterSecondDot" Id="{21466209-56c5-433e-941e-1149a8e5c2d5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION GetSubstringAfterSecondDot  : STRING(255)
+VAR_INPUT
+    sInput : STRING(255);
+END_VAR
+VAR
+    sOutput         : STRING(255);
+    sDot            : STRING(2) := '.';
+    sEmpty          : STRING(1) := '';   // used as replacement (insert empty)
+    nFirstPos       : UDINT;             // position of first '.'
+    nSecondPosRel   : UDINT;             // position of next '.' relative to the pointer after first '.'
+    nSecondPosAbs   : UDINT;             // absolute position of second '.'
+    nRemoveLen      : UDINT;             // number of chars to remove from start (inclusive of 2nd '.')
+    bOk             : BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Find first dot in the whole string
+nFirstPos := FIND2(ADR(sInput), ADR(sDot));
+
+IF nFirstPos > 0 THEN
+    // Start searching AFTER the first dot:
+    // Positions are 1-based, so offset the pointer by nFirstPos bytes
+    nSecondPosRel := FIND2(ADR(sInput) + nFirstPos, ADR(sDot));
+
+    IF nSecondPosRel > 0 THEN
+        // Absolute index = (index before offset) + (relative index)
+        nSecondPosAbs := nFirstPos + nSecondPosRel;
+
+        // Remove everything from position 1 through the second dot
+        nRemoveLen := nSecondPosAbs;
+
+        bOk := REPLACE2(
+            pSrcString    := ADR(sInput),
+            pInsertString := ADR(sEmpty),             // replace with empty string
+            pDstString    := ADR(sOutput),
+            nDstSize      := SIZEOF(sOutput),
+            nLen          := nRemoveLen,
+            nPos          := 1
+        );
+
+        GetSubstringAfterSecondDot := sOutput;        // (truncated if bOk = FALSE)
+    ELSE
+        // Only one dot found → return input unchanged
+        GetSubstringAfterSecondDot := sInput;
+    END_IF
+ELSE
+    // No dot found → return input unchanged
+    GetSubstringAfterSecondDot := sInput;
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

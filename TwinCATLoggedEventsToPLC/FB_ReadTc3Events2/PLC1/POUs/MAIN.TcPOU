@@ -4,35 +4,38 @@
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
 	// FB_ReadTc3Events
-	fbReadTc3Events	   : FB_ReadTc3Events2;
-	bReadEvents		   : BOOL							   := TRUE;
-	nLanguage		   : DINT							   := 1033;
-	eDateAndTimeFormat : Tc2_Utilities.E_DateAndTimeFormat := Tc2_Utilities.E_DateAndTimeFormat.en_US;
-	bClearDisplay	   : BOOL;
-	eSeverityMin	   : TcEventSeverity;
-	bError			   : BOOL;
-	hr				   : HRESULT;
-	numOfEvents		   : UDINT;
-	ReadLoggedEvents   : BOOL;
-	Loaded			   : BOOL;
-	Result			   : HRESULT;
+	fbReadTc3Events			 : FB_ReadTc3Events2;
+	bReadActiveEvents		 : BOOL								 := TRUE;
+	nLanguage				 : DINT								 := 1033;
+	eDateAndTimeFormat		 : Tc2_Utilities.E_DateAndTimeFormat := Tc2_Utilities.E_DateAndTimeFormat.en_US;
+	bClearDisplay			 : BOOL;
+	eSeverityMinActiveEvents : TcEventSeverity;
+	bError					 : BOOL;
+	hr						 : HRESULT;
+	numOfEvents				 : UDINT;
+	ReadLoggedEvents		 : BOOL;
+	Loaded					 : BOOL;
+	Result					 : HRESULT;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// Call fbReadTc3Events
-fbReadTc3Events(bReadEvents		   := bReadEvents,
+fbReadTc3Events(bReadEvents		   := bReadActiveEvents,
 				nLanguageID		   := nLanguage,
 				eDateAndTimeFormat := eDateAndTimeFormat,
 				bClearTable		   := bClearDisplay,
-				bClearLoggedTable  := bClearDisplay,
-				eMinSeverity	   := eSeverityMin,
+				eMinSeverity	   := eSeverityMinActiveEvents,
+				aEvents			   =>,
 				nNumberOfEvents	   => numOfEvents,
 				bError			   => bError,
-				hrErrorCode		   => hr);
-
+				hrErrorCode		   => hr,
+				bClearLoggedTable  := bClearDisplay,
+				LoggedEvents	   =>);
 bClearDisplay := FALSE;
 
+
+
 IF ReadLoggedEvents THEN
-	Loaded:=fbReadTc3Events.ReadLoggedEvents(bExec:=ReadLoggedEvents , hrErrorCode=>Result );
+	Loaded := fbReadTc3Events.ReadLoggedEvents(bExec := ReadLoggedEvents, hrErrorCode => Result);
 END_IF]]></ST>
     </Implementation>
   </POU>

@@ -29,6 +29,9 @@
     <Compile Include="POUs\FB_ReadTc3Events2.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="POUs\GetSubstringAfterSecondDot.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="POUs\MAIN.TcPOU">
       <SubType>Code</SubType>
     </Compile>

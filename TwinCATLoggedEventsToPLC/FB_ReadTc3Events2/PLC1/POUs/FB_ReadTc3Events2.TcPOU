@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1">
   <POU Name="FB_ReadTc3Events2" Id="{5a6edfd8-5abe-4422-80aa-514948601d1b}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadTc3Events2 EXTENDS FB_ReadTc3Events
+    <Declaration><![CDATA[{attribute 'reflection'}
+FUNCTION_BLOCK FB_ReadTc3Events2 EXTENDS FB_ReadTc3Events
 VAR_INPUT
 	bClearLoggedTable : BOOL;
 END_VAR
@@ -11,8 +12,19 @@ VAR_OUTPUT
 END_VAR
 
 VAR
+	{attribute 'instance-path'}
+	{attribute 'noinit'}
+	sPath			   : T_MAXSTRING;
 	CallReadTc3Events2 : NT_StartProcess;
 	Win32Events		   : FB_TcMessage;
+	DeviceInfo		   : FB_GetDeviceIdentificationEx;
+	Init			   : BOOL := TRUE;
+	fbArgsFormat	   : FB_FormatString2;
+	ReadTc3Events2Args : T_MAXSTRING;
+END_VAR
+
+VAR CONSTANT
+	ArgsFormat : T_MAXSTRING := 'ReadTc3Events2.dll --symbolpath %s --languageid %d --datetimeformat %d ';
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();
@@ -20,10 +32,24 @@ IF bClearLoggedTable THEN
 	MEMSET(ADR(LoggedEvents), 0, SIZEOF(LoggedEvents));
 END_IF
 
-CallReadTc3Events2(NETID	 := '',
-				   PATHSTR	 :='/usr/local/bin/dotnet',
-				   DIRNAME	 :='/usr/local/etc/TwinCAT/3.1/Components/ReadTc3Events2/net8.0',
-				   COMNDLINE :='ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2');]]></ST>
+IF Init THEN
+	DeviceInfo(bExecute := TRUE, sNetId := '');
+	IF NOT DeviceInfo.bBusy THEN
+		DeviceInfo(bExecute := FALSE);
+
+		//Set paths based on target system OS
+		IF DeviceInfo.stDevIdent.strImageOsName = 'TwinCAT/BSD' THEN
+			CallReadTc3Events2.PATHSTR := '/usr/local/bin/dotnet'; //doas pkg install dotnet
+			CallReadTc3Events2.DIRNAME := '/usr/local/etc/TwinCAT/3.1/Components/ReadTc3Events2/net8.0';
+		END_IF
+
+		sPath:=CONCAT(GetSubstringAfterSecondDot(sPath),'.LoggedEvents');
+		Init := FALSE;
+	END_IF
+END_IF
+
+//CallReadTc3Events2(NETID := '', COMNDLINE := 'ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2');
+CallReadTc3Events2(NETID:='',COMNDLINE:=ReadTc3Events2Args);]]></ST>
     </Implementation>
     <Method Name="FB_Init" Id="{518a7732-9a1b-4fc5-8f94-24f44370f21e}">
       <Declaration><![CDATA[//FB_Init is always available implicitly and it is used primarily for initialization.
@@ -36,13 +62,18 @@ VAR_INPUT
     bInCopyCode: BOOL;  // TRUE: the instance will be copied to the copy code afterward (online change)   
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[Win32Events.CreateEx(TC_EVENTS.Win32EventClass.ERROR_SUCCESS,0); //Use the Win32EventClass - so target event logger knows about Event GUID]]></ST>
+        <ST><![CDATA[Win32Events.CreateEx(TC_EVENTS.Win32EventClass.ERROR_SUCCESS,0); //Use the Win32EventClass - so target event logger knows about Event GUID. Used in the dotnet application]]></ST>
       </Implementation>
     </Method>
     <Method Name="ReadLoggedEvents" Id="{936688d8-92ba-4ae8-8c66-ec3f8ec0b489}">
-      <Declaration><![CDATA[METHOD ReadLoggedEvents : BOOL;
+      <Declaration><![CDATA[//A rising edge on the input parameter bExec triggers the Read procedure. 
+
+//The asynchronous process is terminated as soon as the reference bExec is set back to FALSE from the method. 
+
+//When the process ends, the return value of the method indicates whether the call to ReadTc3Events2 was successful (TRUE) or failed (FALSE) for the duration of one call.
+METHOD ReadLoggedEvents : BOOL;
 VAR_INPUT
-	bExec	  : REFERENCE TO BOOL;
+	bExec : REFERENCE TO BOOL;
 END_VAR
 
 VAR_OUTPUT
@@ -50,17 +81,27 @@ VAR_OUTPUT
 END_VAR
 
 VAR_INST
-	Step :UDINT;
+	Step : UDINT;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[CASE Step OF
 	0:
-		CallReadTc3Events2.START := TRUE;
-		Step := 5;
-	5://Check busy
-		IF CallReadTc3Events2.BUSY THEN
-			Step := 10;
+		fbArgsFormat(pFormatString := ADR(ArgsFormat),
+					 arg1		   := F_STRING(sPath),
+					 arg2		   := F_DINT(THIS^.nLanguageID),
+					 arg3		   := F_INT(THIS^.eDateAndTimeFormat),
+					 pDstString	   := ADR(ReadTc3Events2Args),
+					 nDstSize	   := SIZEOF(ReadTc3Events2Args));
+
+		IF fbArgsFormat.bError THEN
+			bExec			 := FALSE;
+			ReadLoggedEvents := FALSE;
+			hrErrorCode		 := fbArgsFormat.nErrId;
+			RETURN;
 		END_IF
+
+		CallReadTc3Events2.START := TRUE;
+		Step					 := 10;
 
 	10:
 		IF NOT CallReadTc3Events2.BUSY THEN
@@ -69,11 +110,11 @@ END_VAR]]></Declaration>
 				ReadLoggedEvents := TRUE;
 			ELSE
 				hrErrorCode		 := CallReadTc3Events2.ERRID;
-				ReadLoggedEvents := FALSE;		
+				ReadLoggedEvents := FALSE;
 			END_IF
 
-			bExec := FALSE;
-			Step  := 0;
+			bExec					 := FALSE;
+			Step					 := 0;
 			CallReadTc3Events2.START := FALSE;
 		END_IF
 END_CASE]]></ST>
