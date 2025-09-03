@@ -7,7 +7,7 @@ VAR_INPUT
 END_VAR
 
 VAR_OUTPUT
-	LoggedEvents : ARRAY[1..200] OF ST_ReadEventW;
+	LoggedEvents : ARRAY[1..80] OF ST_ReadEventW;
 END_VAR
 
 VAR
@@ -23,7 +23,7 @@ END_IF
 CallReadTc3Events2(NETID	 := '',
 				   PATHSTR	 :='/usr/local/bin/dotnet',
 				   DIRNAME	 :='/usr/local/etc/TwinCAT/3.1/Components/ReadTc3Events2/net8.0',
-				   COMNDLINE :='ReadTc3Events2.dll --amsnetid 127.0.0.1.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2');]]></ST>
+				   COMNDLINE :='ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2');]]></ST>
     </Implementation>
     <Method Name="FB_Init" Id="{518a7732-9a1b-4fc5-8f94-24f44370f21e}">
       <Declaration><![CDATA[//FB_Init is always available implicitly and it is used primarily for initialization.
@@ -43,7 +43,6 @@ END_VAR]]></Declaration>
       <Declaration><![CDATA[METHOD ReadLoggedEvents : BOOL;
 VAR_INPUT
 	bExec	  : REFERENCE TO BOOL;
-	PathToDll : T_MaxString;
 END_VAR
 
 VAR_OUTPUT
@@ -56,7 +55,6 @@ END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[CASE Step OF
 	0:
-		CallReadTc3Events2.PATHSTR := PathToDll;
 		CallReadTc3Events2.START := TRUE;
 		Step := 5;
 	5://Check busy

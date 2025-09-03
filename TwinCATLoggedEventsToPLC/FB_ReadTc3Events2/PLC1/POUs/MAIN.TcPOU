@@ -32,7 +32,7 @@ fbReadTc3Events(bReadEvents		   := bReadEvents,
 bClearDisplay := FALSE;
 
 IF ReadLoggedEvents THEN
-	Loaded:=fbReadTc3Events.ReadLoggedEvents(bExec:=ReadLoggedEvents , PathToDll:='' , hrErrorCode=>Result );
+	Loaded:=fbReadTc3Events.ReadLoggedEvents(bExec:=ReadLoggedEvents , hrErrorCode=>Result );
 END_IF]]></ST>
     </Implementation>
   </POU>

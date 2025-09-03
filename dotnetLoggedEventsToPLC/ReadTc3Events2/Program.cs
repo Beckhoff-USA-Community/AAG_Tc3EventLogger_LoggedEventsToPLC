@@ -564,8 +564,8 @@ public enum E_DateAndTimeFormat
 // Command line options class for ReadTc3Events2
 public class Options
 {
-    [Option("amsnetid", Required = true, HelpText = "TwinCAT AMS Net ID port (e.g., 39.120.71.102.1.1:851)")]
-    public string AmsNetId { get; set; } = string.Empty;
+    [Option("amsnetid", Required = false, Default = "127.0.0.1.1.1:851", HelpText = "TwinCAT AMS Net ID port (e.g., 39.120.71.102.1.1:851). Defaults to local: 127.0.0.1.1.1:851")]
+    public string AmsNetId { get; set; } = "127.0.0.1.1.1:851";
 
     [Option("symbolpath", Required = true, HelpText = "Full path to LoggedEvents array in PLC (e.g., MAIN.fbReadTc3Events.LoggedEvents)")]
     public string SymbolPath { get; set; } = string.Empty;
