@@ -12,6 +12,7 @@ END_VAR
 
 VAR
 	CallReadTc3Events2 : NT_StartProcess;
+	Win32Events		   : FB_TcMessage;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();
@@ -24,6 +25,20 @@ CallReadTc3Events2(NETID	 := '',
 				   DIRNAME	 :='/usr/local/etc/TwinCAT/3.1/Components/ReadTc3Events2/net8.0',
 				   COMNDLINE :='ReadTc3Events2.dll --amsnetid 127.0.0.1.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2');]]></ST>
     </Implementation>
+    <Method Name="FB_Init" Id="{518a7732-9a1b-4fc5-8f94-24f44370f21e}">
+      <Declaration><![CDATA[//FB_Init is always available implicitly and it is used primarily for initialization.
+//The return value is not evaluated. For a specific influence, you can also declare the
+//methods explicitly and provide additional code there with the standard initialization
+//code. You can evaluate the return value.
+METHOD FB_Init: BOOL
+VAR_INPUT
+    bInitRetains: BOOL; // TRUE: the retain variables are initialized (reset warm / reset cold)
+    bInCopyCode: BOOL;  // TRUE: the instance will be copied to the copy code afterward (online change)   
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Win32Events.CreateEx(TC_EVENTS.Win32EventClass.ERROR_SUCCESS,0); //Use the Win32EventClass - so target event logger knows about Event GUID]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="ReadLoggedEvents" Id="{936688d8-92ba-4ae8-8c66-ec3f8ec0b489}">
       <Declaration><![CDATA[METHOD ReadLoggedEvents : BOOL;
 VAR_INPUT
@@ -56,7 +71,7 @@ END_VAR]]></Declaration>
 				ReadLoggedEvents := TRUE;
 			ELSE
 				hrErrorCode		 := CallReadTc3Events2.ERRID;
-				ReadLoggedEvents := FALSE;
+				ReadLoggedEvents := FALSE;		
 			END_IF
 
 			bExec := FALSE;

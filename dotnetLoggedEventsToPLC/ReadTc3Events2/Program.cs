@@ -24,47 +24,72 @@ try
     var options = ParseArguments(args);
     if (options == null) return 1;
 
-    // Initialize logging (overwrites previous log file)
-    string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ReadTc3Events2.log");
-    InitializeLogFile(logFilePath);
-    LogToFile(logFilePath, "=== ReadTc3Events2 Session Started ===");
-    LogToFile(logFilePath, $"Timestamp: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-    LogToFile(logFilePath, $"Input Parameters:");
-    LogToFile(logFilePath, $"  AMS Net ID: {options.AmsNetId}");
-    LogToFile(logFilePath, $"  Symbol Path: {options.SymbolPath}");
-    LogToFile(logFilePath, $"  Language ID: {options.LanguageId}");
-    LogToFile(logFilePath, $"  DateTime Format: {options.DateTimeFormat} ({(int)options.DateTimeFormat})");
-
     ValidateArguments(options);
-    LogToFile(logFilePath, "Arguments validated successfully");
 
     var (logger, adsClient) = ConnectToSystems(options.AmsNetId);
-    LogToFile(logFilePath, "Connected to TwinCAT Event Logger and ADS Client");
+    
+    // Log session start and input parameters to TwinCAT Event Logger
+    var inputParamsJson = System.Text.Json.JsonSerializer.Serialize(new
+    {
+        inputParameters = new
+        {
+            amsNetId = options.AmsNetId,
+            symbolPath = options.SymbolPath,
+            languageId = options.LanguageId,
+            dateTimeFormat = $"{options.DateTimeFormat} ({(int)options.DateTimeFormat})"
+        }
+    });
+    
+    LogToTwinCAT(logger, "Session started with input parameters", SeverityLevelEnum.Info, options.Verbose, forceLog: false, jsonData: inputParamsJson);
+    LogToTwinCAT(logger, "Arguments validated successfully", SeverityLevelEnum.Info, options.Verbose);
+    LogToTwinCAT(logger, "Connected to TwinCAT Event Logger and ADS Client", SeverityLevelEnum.Info, options.Verbose);
     
     int arraySize = ValidateAndGetArraySize(adsClient, options.SymbolPath);
-    LogToFile(logFilePath, $"Array size determined: {arraySize} elements");
+    LogToTwinCAT(logger, $"Array size determined: {arraySize} elements", SeverityLevelEnum.Info, options.Verbose);
     
     var events = GetLoggedEvents(logger, arraySize);
-    LogToFile(logFilePath, $"Retrieved {events.Count} logged events from TwinCAT");
+    LogToTwinCAT(logger, $"Retrieved {events.Count} logged events from TwinCAT", SeverityLevelEnum.Info, options.Verbose);
     
     var plcEvents = ProcessEvents(events, arraySize, options.LanguageId, options.DateTimeFormat);
-    LogToFile(logFilePath, $"Processed {plcEvents.Count} events for PLC format");
+    LogToTwinCAT(logger, $"Processed {plcEvents.Count} events for PLC format", SeverityLevelEnum.Info, options.Verbose);
     
     WriteEventsToPlc(adsClient, options.SymbolPath, plcEvents, arraySize);
-    LogToFile(logFilePath, $"Successfully wrote {plcEvents.Count} events to PLC array");
+    LogToTwinCAT(logger, $"Successfully wrote {plcEvents.Count} events to PLC array", SeverityLevelEnum.Info, options.Verbose);
     
     Console.WriteLine($"Successfully wrote {plcEvents.Count} events to PLC array: {options.SymbolPath}");
-    LogToFile(logFilePath, "=== Session Completed Successfully ===");
+    LogToTwinCAT(logger, "Session completed successfully", SeverityLevelEnum.Info, options.Verbose);
     
     CleanupConnections(logger, adsClient);
     return 0;
 }
 catch (Exception ex)
 {
-    string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ReadTc3Events2.log");
-    LogToFile(logFilePath, $"ERROR: {ex.Message}");
-    LogToFile(logFilePath, $"Stack Trace: {ex.StackTrace}");
-    LogToFile(logFilePath, "=== Session Failed ===");
+    // Try to log error to TwinCAT if we have a logger available
+    try
+    {
+        var options = ParseArguments(args);
+        if (options != null)
+        {
+            var (logger, _) = ConnectToSystems(options.AmsNetId);
+            
+            var additionalData = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                inputParameters = new
+                {
+                    amsNetId = options.AmsNetId,
+                    symbolPath = options.SymbolPath,
+                    languageId = options.LanguageId,
+                    dateTimeFormat = $"{options.DateTimeFormat} ({(int)options.DateTimeFormat})"
+                }
+            });
+            
+            LogErrorToTwinCAT(logger, ex.Message, ex, additionalData);
+        }
+    }
+    catch
+    {
+        // If we can't log to TwinCAT, just continue with console output
+    }
     
     Console.WriteLine($"Error: {ex.Message}");
     return 1;
@@ -418,15 +443,29 @@ static void CleanupConnections(TcEventLogger? logger, AdsClient? adsClient)
 }
 
 // ============================================================================
-// LOGGING UTILITIES
+// TWINCAT EVENT LOGGING UTILITIES
 // ============================================================================
 
-static void LogToFile(string filePath, string message)
+static void LogToTwinCAT(TcEventLogger logger, string message, SeverityLevelEnum severity, bool isVerbose, bool forceLog = false, string? jsonData = null)
 {
+    if (!forceLog && !isVerbose) return;
+    
     try
     {
-        string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}";
-        File.AppendAllText(filePath, logEntry + Environment.NewLine);
+        var cls = Guid.Parse("{4abefbbf-6620-4349-91ad-e6110a3be851}"); // Win32EventClass
+        var id = 0u; // ERROR_SUCCESS
+        var source = new TcSourceInfo
+        {
+            Name = "ReadTc3Events2",
+            Id = 1000
+        };
+        
+        var eventArgs = new TcArguments();
+        
+        // Add JSON data to arguments if provided
+        string finalJsonData = jsonData ?? $"{{ \"message\": \"{message}\" }}";
+        
+        logger.SendTcMessage(cls, id, severity, finalJsonData, source, eventArgs);
     }
     catch
     {
@@ -434,12 +473,31 @@ static void LogToFile(string filePath, string message)
     }
 }
 
-static void InitializeLogFile(string filePath)
+static void LogErrorToTwinCAT(TcEventLogger logger, string errorMessage, Exception? ex = null, string? additionalData = null)
 {
     try
     {
-        // Overwrite the file at the start of each session
-        File.WriteAllText(filePath, "");
+        var cls = Guid.Parse("{4abefbbf-6620-4349-91ad-e6110a3be851}"); // Win32EventClass for errors
+        var id = 0x57u; // ERROR_INVALID_PARAMETER
+        var source = new TcSourceInfo
+        {
+            Name = "ReadTc3Events2",
+            Id = 1000
+        };
+        
+        var eventArgs = new TcArguments();
+        
+        // Create detailed JSON for error information
+        var errorData = new
+        {
+            error = errorMessage,
+            stackTrace = ex?.StackTrace,
+            additionalData = additionalData
+        };
+        
+        string jsonData = System.Text.Json.JsonSerializer.Serialize(errorData);
+        
+        logger.SendTcMessage(cls, id, SeverityLevelEnum.Error, jsonData, source, eventArgs);
     }
     catch
     {
@@ -517,4 +575,7 @@ public class Options
 
     [Option("datetimeformat", Required = true, HelpText = "DateTime format enum value (0=de_DE, 1=en_GB, 2=en_US)")]
     public E_DateAndTimeFormat DateTimeFormat { get; set; }
+
+    [Option("verbose", Required = false, Default = false, HelpText = "Enable verbose logging to TwinCAT Event Logger")]
+    public bool Verbose { get; set; }
 }

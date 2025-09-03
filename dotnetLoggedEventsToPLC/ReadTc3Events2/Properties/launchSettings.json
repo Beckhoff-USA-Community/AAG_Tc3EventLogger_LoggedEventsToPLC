@@ -9,8 +9,16 @@
       "commandLineArgs": "--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0"
     },
     "ReadTc3Events2 (English UK)": {
-      "commandName": "Project", 
+      "commandName": "Project",
       "commandLineArgs": "--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 2057 --datetimeformat 1"
+    },
+    "ReadTc3Events2 (Verbose)": {
+      "commandName": "Project",
+      "commandLineArgs": "--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2 --verbose"
+    },
+    "ReadTc3Events2 (Error)": {
+      "commandName": "Project",
+      "commandLineArgs": "--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEventss --languageid 1033 --datetimeformat 2"
     }
   }
 }
