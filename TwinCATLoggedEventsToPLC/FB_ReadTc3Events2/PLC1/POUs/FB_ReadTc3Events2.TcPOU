@@ -42,7 +42,7 @@ IF Init THEN
 		//Set paths based on target system OS
 		IF DeviceInfo.stDevIdent.strImageOsName = 'TwinCAT/BSD' THEN
 			CallReadTc3Events2.PATHSTR := '/usr/local/bin/dotnet'; //doas pkg install dotnet
-			CallReadTc3Events2.DIRNAME := '/usr/local/etc/TwinCAT/3.1/Components/ReadTc3Events2/publish-freebsd';
+			CallReadTc3Events2.DIRNAME := '/usr/local/etc/TwinCAT/3.1/Components/Plc/ReadTc3Events2';
 		END_IF
 
 		Init := FALSE;
