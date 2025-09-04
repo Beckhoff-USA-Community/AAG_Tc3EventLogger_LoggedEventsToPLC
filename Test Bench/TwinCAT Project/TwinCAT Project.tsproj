@@ -202,7 +202,7 @@
 			</Hides>
 		</DataType>
 	</DataTypes>
-	<Project ProjectGUID="{AF710953-CA2D-41B4-9EFE-9AC0C3F0DDA0}" TargetNetId="39.120.71.102.1.1" Target64Bit="true" SaveToTarget="false" HideSaveToTarget="true" ShowHideConfigurations="#x3c6">
+	<Project ProjectGUID="{AF710953-CA2D-41B4-9EFE-9AC0C3F0DDA0}" TargetNetId="39.120.71.102.1.1" Target64Bit="true" SaveToTarget="false" HideSaveToTarget="true" ShowHideConfigurations="#x3c7">
 		<System>
 			<Settings MaxCpus="2"/>
 			<Tasks>

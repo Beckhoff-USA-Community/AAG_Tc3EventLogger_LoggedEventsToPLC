@@ -197,7 +197,7 @@ static int ValidateAndGetArraySize(AdsClient adsClient, string symbolPath)
         }
 
         // Verify this is an array of ST_ReadEventW structures
-        string elementTypeName = arrayInstance.ElementType.Name;
+        string elementTypeName = arrayInstance.ElementType?.Name ?? "";
         if (elementTypeName != "ST_ReadEventW" && !elementTypeName.EndsWith(".ST_ReadEventW"))
         {
             throw new InvalidOperationException($"Array element type '{elementTypeName}' is not ST_ReadEventW");

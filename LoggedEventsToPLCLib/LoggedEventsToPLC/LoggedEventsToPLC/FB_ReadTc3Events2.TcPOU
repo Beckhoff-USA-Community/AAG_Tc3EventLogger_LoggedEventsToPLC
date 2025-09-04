@@ -5,6 +5,7 @@
 FUNCTION_BLOCK FB_ReadTc3Events2 EXTENDS FB_ReadTc3Events
 VAR_INPUT
 	bClearLoggedTable : BOOL;
+	TimeOut			  : TIME := DEFAULT_ADS_TIMEOUT;
 END_VAR
 
 VAR_OUTPUT
@@ -20,6 +21,7 @@ VAR
 	CallReadTc3Events2 : NT_StartProcess;
 	fbArgsFormat	   : FB_FormatString2;
 	ReadTc3Events2Args : T_MAXSTRING;
+	ReadTc3Events2Done : BOOL;
 END_VAR
 
 VAR CONSTANT
@@ -119,11 +121,14 @@ VAR_OUTPUT
 END_VAR
 
 VAR_INST
-	Step : UDINT;
+	Step		: UDINT;
+	DoneTimeOut : TON;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[CASE Step OF
 	0:
+		ReadTc3Events2Done := FALSE;
+		DoneTimeOut(IN := FALSE, PT := TimeOut);
 		fbArgsFormat(pFormatString := ADR(ArgsFormat),
 					 arg1		   := F_STRING(sPath),
 					 arg2		   := F_DINT(THIS^.nLanguageID),
@@ -154,6 +159,19 @@ END_VAR]]></Declaration>
 			bExec					 := FALSE;
 			Step					 := 0;
 			CallReadTc3Events2.START := FALSE;
+		END_IF
+
+	15:
+		DoneTimeOut(IN := TRUE);
+		IF ReadTc3Events2Done THEN
+			hrErrorCode := E_HRESULTAdsErr.HRESULT_ADS_NOERROR;
+			bExec		:= FALSE;
+			Step		:= 0;
+		ELSIF DoneTimeOut.Q THEN
+			ReadLoggedEvents := FALSE;
+			hrErrorCode		 := E_HRESULTAdsErr.TIMEOUT;
+			bExec			 := FALSE;
+			Step			 := 0;
 		END_IF
 END_CASE]]></ST>
       </Implementation>

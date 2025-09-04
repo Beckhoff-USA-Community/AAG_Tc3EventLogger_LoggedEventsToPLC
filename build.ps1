@@ -15,19 +15,7 @@ Write-Host ""
 Set-Location "dotnetLoggedEventsToPLC\ReadTc3Events2"
 
 if (-not $SkipDotNet) {
-    Write-Host "[1/4] Building .NET Release version..." -ForegroundColor Yellow
-    try {
-        dotnet build -c Release
-        if ($LASTEXITCODE -ne 0) { throw "Release build failed!" }
-        Write-Host "V Release build completed" -ForegroundColor Green
-        Write-Host ""
-    }
-    catch {
-        Write-Host "ERROR: $_" -ForegroundColor Red
-        exit 1
-    }
-
-    Write-Host "[2/4] Creating framework-dependent publish for TwinCAT/BSD (FreeBSD)..." -ForegroundColor Yellow
+    Write-Host "[1/3] Creating framework-dependent publish for TwinCAT/BSD (FreeBSD)..." -ForegroundColor Yellow
     try {
         dotnet publish -c Release -o ..\..\build-artifacts\freebsd\ReadTc3Events2
         if ($LASTEXITCODE -ne 0) { throw "FreeBSD publish failed!" }
@@ -40,7 +28,7 @@ if (-not $SkipDotNet) {
         exit 1
     }
 
-    Write-Host "[3/4] Creating self-contained executable for Windows..." -ForegroundColor Yellow
+    Write-Host "[2/3] Creating self-contained executable for Windows..." -ForegroundColor Yellow
     try {
         dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o ..\..\build-artifacts\windows\ReadTc3Events2
         if ($LASTEXITCODE -ne 0) { throw "Windows publish failed!" }
@@ -53,7 +41,7 @@ if (-not $SkipDotNet) {
     }
 }
 else {
-    Write-Host "[1-3/4] Skipping .NET builds..." -ForegroundColor Yellow
+    Write-Host "[1-2/3] Skipping .NET builds..." -ForegroundColor Yellow
     Write-Host ""
 }
 
@@ -62,7 +50,7 @@ Set-Location "..\.."
 
 # PLC Library Generation
 if (-not $SkipPlcLibrary) {
-    Write-Host "[4/4] Generating PLC Library..." -ForegroundColor Yellow
+    Write-Host "[3/3] Generating PLC Library..." -ForegroundColor Yellow
     try {
         # Import MessageFilter for COM stability
         . "$PSScriptRoot\Script\MessageFilter.ps1"
@@ -167,7 +155,7 @@ if (-not $SkipPlcLibrary) {
     }
 }
 else {
-    Write-Host "[4/4] Skipping PLC library generation..." -ForegroundColor Yellow
+    Write-Host "[3/3] Skipping PLC library generation..." -ForegroundColor Yellow
     Write-Host ""
 }
 
