@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository contains a proof-of-concept integration between TwinCAT Event Logger and PLC systems, consisting of two main components:
+This repository contains a proof-of-concept integration between TwinCAT Event Logger and PLC systems, consisting of three main components:
 
 1. **dotnetLoggedEventsToPLC** - A .NET 8 console application that reads events from TwinCAT Event Logger and writes them to PLC arrays
-2. **TwinCATLoggedEventsToPLC** - A TwinCAT PLC project that provides the receiving end for logged events
+2. **LoggedEventsToPLCLib** - A TwinCAT PLC library project containing the function blocks and data structures
+3. **Test Bench** - TwinCAT test projects demonstrating integration and providing development environment
 
 ## Architecture
 
@@ -19,12 +20,16 @@ This repository contains a proof-of-concept integration between TwinCAT Event Lo
   - Beckhoff.TwinCAT.TcEventLoggerAdsProxy.Net (2.8.33) - Event Logger integration
   - CommandLineParser (2.9.1) - CLI argument parsing
 
-### TwinCAT PLC Project (TwinCATLoggedEventsToPLC)
-- **Project Name**: FB_ReadTc3Events2
+### TwinCAT PLC Library (LoggedEventsToPLCLib)
+- **Project Path**: `LoggedEventsToPLCLib/LoggedEventsToPLC/`
 - **Main Components**:
-  - `MAIN.TcPOU` - Main program entry point
   - `FB_ReadTc3Events2.TcPOU` - Function block for event processing
-  - `PRG_GenerateEvents.TcPOU` - Event generation for testing
+  - `ST_ReadEventW` - Event structure for .NET/PLC data exchange
+
+### Test Bench Projects (Test Bench)
+- **Solution Path**: `Test Bench/Test Bench.sln`
+- **Purpose**: Development and testing environment for the integration
+- **Contains**: Sample implementations and test scenarios
 
 ## Development Commands
 
@@ -46,16 +51,15 @@ cd dotnetLoggedEventsToPLC
 
 **PowerShell Build Script Options:**
 ```powershell
-.\build.ps1                    # Build everything (.NET + PLC library)
-.\build.ps1 -SkipDotNet        # Only build PLC library
-.\build.ps1 -SkipPlcLibrary    # Only build .NET applications  
-.\build.ps1 -InstallLibrary    # Build and install PLC library to TwinCAT repository
+.\build.ps1                    # Build .NET applications for multi-platform deployment
+.\build.ps1 -SkipDotNet        # Skip .NET builds (currently no effect as PLC builds are disabled)
 ```
+
+**Note**: PLC library generation is temporarily disabled due to TwinCAT automation requirements. The PLC library must be manually created from the LoggedEventsToPLCLib project.
 
 **Build Script Output:**
 - `build-artifacts/freebsd/ReadTc3Events2/` - Framework-dependent build for TwinCAT/BSD (FreeBSD)
 - `build-artifacts/windows/ReadTc3Events2/` - Self-contained executable for Windows
-- `build-artifacts/plc-library/LoggedEventsToPLCLib.library` - TwinCAT PLC library
 
 **Run the application:**
 ```bash
@@ -82,24 +86,35 @@ ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1
 ```
 
 **Development runs (from launchSettings.json):**
-- Local English: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2`
-- Local German: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0`
-- Remote: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2`
-- Verbose mode: Add `--verbose` flag for detailed TwinCAT logging
+- **Local English**: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2`
+- **Local German**: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0`
+- **Local English UK**: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 2057 --datetimeformat 1`
+- **Remote English**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2`
+- **Remote German**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0`
+- **Remote English UK**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 2057 --datetimeformat 1`
+- **Verbose mode**: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2 --verbose`
+- **Error testing**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEventss --languageid 1033 --datetimeformat 2` (intentional typo in symbolpath)
 
-### TwinCAT Project
+### TwinCAT Projects
 
-**Open TwinCAT project:**
+**Open Test Bench project:**
 ```bash
-# Open the solution file in TwinCAT XAE
-TwinCATLoggedEventsToPLC/FB_ReadTc3Events2.sln
+# Open the test bench solution in TwinCAT XAE
+"Test Bench/Test Bench.sln"
+```
+
+**Work with PLC Library:**
+```bash
+# Open library project directly
+LoggedEventsToPLCLib/LoggedEventsToPLC/LoggedEventsToPLC.plcproj
 ```
 
 **Using the PLC Library:**
-1. **Import Library**: In TwinCAT XAE, right-click References > Add Library > Browse to `build-artifacts/plc-library/LoggedEventsToPLCLib.library`
-2. **Add Function Block**: Declare `fbReadTc3Events : FB_ReadTc3Events2;` in your program
-3. **Call Method**: Use `fbReadTc3Events.ReadLoggedEvents(bExec);` to trigger event reading
-4. **Access Events**: Read events from `fbReadTc3Events.LoggedEvents` array
+1. **Manual Library Creation**: Since automated library generation is disabled, manually create the library from `LoggedEventsToPLCLib/LoggedEventsToPLC/LoggedEventsToPLC.plcproj`
+2. **Import Library**: In TwinCAT XAE, right-click References > Add Library > Browse to the manually created `.library` file
+3. **Add Function Block**: Declare `fbReadTc3Events : FB_ReadTc3Events2;` in your program
+4. **Call Method**: Use `fbReadTc3Events.ReadLoggedEvents(bExec);` to trigger event reading
+5. **Access Events**: Read events from `fbReadTc3Events.LoggedEvents` array
 
 **Library Contents:**
 - `FB_ReadTc3Events2` - Main function block that calls the .NET application
@@ -126,7 +141,7 @@ The core data structure for event transfer between .NET and PLC:
 ### Command Line Arguments
 - `--amsnetid`: (Optional) TwinCAT AMS Net ID with port (format: x.x.x.x.x.x:port). Defaults to 127.0.0.1.1.1:851 for local connections
 - `--symbolpath`: Full PLC symbol path to event array
-- `--languageid`: Language ID (1033=English, 1031=German, 2057=English UK)
+- `--languageid`: Language ID (1033=English US, 1031=German, 2057=English UK)
 - `--datetimeformat`: Format enum (0=de_DE, 1=en_GB, 2=en_US)
 - `--verbose`: Enable verbose logging to TwinCAT Event Logger
 

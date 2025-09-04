@@ -60,20 +60,138 @@ else {
 # Change back to root directory
 Set-Location "..\.."
 
+# PLC Library Generation
+if (-not $SkipPlcLibrary) {
+    Write-Host "[4/4] Generating PLC Library..." -ForegroundColor Yellow
+    try {
+        # Import MessageFilter for COM stability
+        . "$PSScriptRoot\Script\MessageFilter.ps1"
+        AddMessageFilterClass
+        [EnvDTEUtils.MessageFilter]::Register()
+        
+        # Paths
+        $solutionPath = Join-Path $PSScriptRoot "Test Bench\Test Bench.sln"
+        $outputDir = Join-Path $PSScriptRoot "build-artifacts\plc-library"
+        $libraryPath = Join-Path $outputDir "LoggedEventsToPLCLib.library"
+        
+        # Verify solution exists
+        if (-not (Test-Path $solutionPath)) {
+            throw "Solution file not found: $solutionPath"
+        }
+        
+        # Create output directory if it doesn't exist
+        if (-not (Test-Path $outputDir)) {
+            New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
+        }
+        
+        # Delete existing library file if it exists
+        if (Test-Path $libraryPath) {
+            Remove-Item $libraryPath -Force
+        }
+        
+        # Start TcXaeShell
+        $dte = New-Object -ComObject TcXaeShell.DTE.17.0
+        $dte.SuppressUI = $true
+        $dte.MainWindow.Visible = $false
+        
+        # Open solution
+        $solution = $dte.Solution
+        $solution.Open($solutionPath)
+        
+        # Find the LoggedEventsToPLCLib project by name
+        $targetProjectName = "LoggedEventsToPLCLib"
+        $plcLibProject = $null
+        
+        foreach ($project in $solution.Projects) {
+            if ($project.Name -eq $targetProjectName) {
+                $plcLibProject = $project
+                break
+            }
+        }
+        
+        if ($null -eq $plcLibProject) {
+            throw "LoggedEventsToPLCLib project not found in solution (Name: $targetProjectName)"
+        }
+        
+        # Get system manager and lookup PLC project tree item
+        $systemManager = $plcLibProject.Object
+        $plcTreeItem = $systemManager.LookupTreeItem("TIPC^LoggedEventsToPLC^LoggedEventsToPLC Project")
+        
+        if ($null -eq $plcTreeItem) {
+            throw "PLC project tree item not found"
+        }
+        
+        # Generate library
+        # Second parameter: true = install to repository, false = just save to file
+        $installToRepo = $InstallLibrary.IsPresent
+        $plcTreeItem.SaveAsLibrary($libraryPath, $installToRepo)
+        
+        # Verify library file was created
+        if (Test-Path $libraryPath) {
+            $fileInfo = Get-Item $libraryPath
+            Write-Host "V PLC library created: $($fileInfo.Name) ($([math]::Round($fileInfo.Length / 1KB, 2)) KB)" -ForegroundColor Green
+        } else {
+            throw "Library file was not created at expected location"
+        }
+        
+        Write-Host ""
+        
+    } catch {
+        Write-Host "ERROR: $_" -ForegroundColor Red
+        exit 1
+    } finally {
+        # Clean up COM objects
+        if ($null -ne $dte) {
+            try {
+                # Save all projects in the solution
+                if ($null -ne $solution) {
+                    for ($i = 1; $i -le $solution.Projects.Count; $i++) {
+                        try {
+                            $solution.Projects.Item($i).Save()
+                        } catch {
+                            # Ignore save errors for individual projects
+                        }
+                    }
+                    
+                    # Close solution without saving dialog (false = don't save)
+                    $solution.Close($false)
+                }
+                
+                # Quit DTE
+                $dte.Quit()
+            } catch {
+                # Ignore cleanup errors
+            }
+        }
+        [EnvDTEUtils.MessageFilter]::Revoke()
+    }
+}
+else {
+    Write-Host "[4/4] Skipping PLC library generation..." -ForegroundColor Yellow
+    Write-Host ""
+}
+
 Write-Host "====================================================================" -ForegroundColor Cyan
 Write-Host "Build Summary:" -ForegroundColor Cyan  
 Write-Host "====================================================================" -ForegroundColor Cyan
 
 if (-not $SkipDotNet) {
     Write-Host "TwinCAT/BSD (FreeBSD): .\build-artifacts\freebsd\ReadTc3Events2\" -ForegroundColor White
-    Write-Host "  - Copy entire ReadTc3Events2 folder to target" -ForegroundColor Gray
+    Write-Host "  - Copy entire ReadTc3Events2 folder to /usr/local/etc/TwinCAT/3.1/Components/Plc" -ForegroundColor Gray
     Write-Host "  - Run: dotnet ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2" -ForegroundColor Gray
     Write-Host "  - Requires: pkg install dotnet-runtime" -ForegroundColor Gray
     Write-Host ""
     
     Write-Host "Windows: .\build-artifacts\windows\ReadTc3Events2\ReadTc3Events2.exe" -ForegroundColor White
-    Write-Host "  - Copy entire ReadTc3Events2 folder to target, or just the .exe" -ForegroundColor Gray
+    Write-Host "  - Copy entire ReadTc3Events2 folder to C:\Program Files (x86)\Beckhoff\TwinCAT\3.1\Components\Plc, or just the .exe" -ForegroundColor Gray
     Write-Host "  - Run: ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2" -ForegroundColor Gray
+    Write-Host ""
+}
+
+if (-not $SkipPlcLibrary) {
+    Write-Host "PLC Library: .\build-artifacts\plc-library\LoggedEventsToPLCLib.library" -ForegroundColor White
+    Write-Host "  - Import in TwinCAT XAE: References > Add Library > Browse to library file" -ForegroundColor Gray
+    Write-Host "  - Use FB_ReadTc3Events2 function block in your PLC project" -ForegroundColor Gray
     Write-Host ""
 }
 
@@ -82,8 +200,7 @@ Write-Host "====================================================================
 
 Write-Host ""
 Write-Host "Usage examples:" -ForegroundColor Yellow
-Write-Host "  .\build.ps1                    # Build .NET applications" -ForegroundColor Gray
-Write-Host "  .\build.ps1 -SkipDotNet        # Skip .NET builds" -ForegroundColor Gray  
-Write-Host ""
-Write-Host "NOTE: PLC library generation temporarily disabled due to TwinCAT automation requirements." -ForegroundColor Yellow
-Write-Host "      The PLC library can be manually created from LoggedEventsToPLCLib project." -ForegroundColor Yellow
+Write-Host "  .\build.ps1                    # Build everything (.NET + PLC library)" -ForegroundColor Gray
+Write-Host "  .\build.ps1 -SkipDotNet        # Only build PLC library" -ForegroundColor Gray
+Write-Host "  .\build.ps1 -SkipPlcLibrary    # Only build .NET applications" -ForegroundColor Gray
+Write-Host "  .\build.ps1 -InstallLibrary    # Build and install PLC library to TwinCAT repository" -ForegroundColor Gray
