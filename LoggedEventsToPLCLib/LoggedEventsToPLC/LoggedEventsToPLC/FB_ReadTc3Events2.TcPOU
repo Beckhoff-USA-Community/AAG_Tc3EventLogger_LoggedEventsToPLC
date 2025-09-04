@@ -20,8 +20,6 @@ VAR
 	CallReadTc3Events2 : NT_StartProcess;
 	fbArgsFormat	   : FB_FormatString2;
 	ReadTc3Events2Args : T_MAXSTRING;
-
-	//Win32Events		   : FB_TcMessage;
 END_VAR
 
 VAR CONSTANT
@@ -75,10 +73,8 @@ VAR
 	bOk			  : BOOL;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[//Win32Events.CreateEx(TC_EVENTS.Win32EventClass.ERROR_SUCCESS,0); /
-
-//Use the Win32EventClass - so event logger knows about Win32EventClass GUID. Used by the dotnet application
-{attribute 'analysis' := '-139'}
+        <ST><![CDATA[//Use the Win32EventClass - so event logger knows about Win32EventClass GUID. Used by the dotnet application
+{attribute 'analysis' := '-C0139'}
 TC_EVENTS.Win32EventClass;
 
 //Trim the project name, and PLC name from the function block instance path
@@ -138,7 +134,7 @@ END_VAR]]></Declaration>
 		IF fbArgsFormat.bError THEN
 			bExec			 := FALSE;
 			ReadLoggedEvents := FALSE;
-			hrErrorCode		 := fbArgsFormat.nErrId;
+			hrErrorCode		 := TO_DINT(fbArgsFormat.nErrId);
 			RETURN;
 		END_IF
 
@@ -151,7 +147,7 @@ END_VAR]]></Declaration>
 				hrErrorCode		 := 0;
 				ReadLoggedEvents := TRUE;
 			ELSE
-				hrErrorCode		 := CallReadTc3Events2.ERRID;
+				hrErrorCode		 := TO_DINT(CallReadTc3Events2.ERRID);
 				ReadLoggedEvents := FALSE;
 			END_IF
 

@@ -2,44 +2,46 @@
 # Script1.ps1
 #
 
-. "C:\Users\Admin\Desktop\BAUS_AI\Standalone_SysMan\Script\MessageFilter.ps1"
+. "C:\Users\Admin\Desktop\BAUS_AI\PowerShell\Script\MessageFilter.ps1"
 
 AddMessageFilterClass
 
 [EnvDTEUtils.MessageFilter]::Register() #Register
 
-$projectPath   = "C:\Users\Admin\Documents\TcXaeShell\TwinCAT Project1\TwinCAT Project1\"
-$solutionName  = "TwinCAT Project1.tsproj"
+$projectPath   = "C:\temp\Training\AI_Training\Tutorials\"
+$solutionName  = "Training.sln"
 $fullPath	   = $projectPath + $solutionName   
-$modifiedPrj   = "C:\temp\BAUS\NewPrj.tsproj"
 
-# get standalone sysMan
-$rm = new-object -com TcSysManagerRM
-$sysman = $rm.CreateSysManager15()
+# start TcXaeShell
+$dte = new-object -com TcXaeShell.DTE.17.0
 
-# open existing project
-$sysman.OpenConfiguration($fullPath)
+# silent mode
+$dte.SuppressUI = $true
+$dte.MainWindow.Visible = $true
 
-# use of well-known AI interfaces
-$io = $sysman.LookupTreeItem("TIID")
-$ecMaster = $io.CreateChild("EtherCAT Master", 111)
-$ek1100 = $ecMaster.CreateChild("EK1100", 9099, "", "EK1100")
-$el1004 = $ek1100.CreateChild("EL1004", 9099, "", "EL1004")
+# open solution
+$sln = $dte.Solution
+$sln.Open($fullPath)
 
-# start project build to get build output
-$sysman.BuildTargetPlatform("TwinCAT RT (x64)")
+# open the first project in the solution (assumption: only one project in sln)
+$project = $sln.Projects.Item(1)
+$sysManager = $project.Object
 
-# set target
-#$sysman.SetTargetNetId("127.0.0.1.1.1")
+# start solution build and wait for finish (true)
+$sln.solutionBuild.Build($true)
 
-# activate configuration
-$sysman.ActivateConfiguration()
+# get last build info ( !=0 --> error)
+$lastBuildInfo = $sln.solutionBuild.LastBuildInfo
 
-# save new project
-$sysman.SaveConfiguration($modifiedPrj)
+if($lastBuildInfo -eq 0){
+	$dte.Quit()
+	Exit 0
+}
+else{
+	$dte.Quit()
+	Exit 1
+}
 
-
-Exit 0
 
 [EnvDTEUtils.MessageFilter]::Revoke() 
 
