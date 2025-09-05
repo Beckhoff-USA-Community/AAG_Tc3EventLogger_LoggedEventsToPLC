@@ -4,12 +4,12 @@
     <Declaration><![CDATA[{attribute 'reflection'}
 FUNCTION_BLOCK FB_ReadTc3Events2 EXTENDS FB_ReadTc3Events
 VAR_INPUT
-	bClearLoggedTable : BOOL;
-	TimeOut			  : TIME := DEFAULT_ADS_TIMEOUT;
+	bClearLoggedTable : BOOL;//clear the output LoggedEvents array
+	TimeOut			  : TIME := DEFAULT_ADS_TIMEOUT;//timeout to wait for logged events to finish being sent
 END_VAR
 
 VAR_OUTPUT
-	LoggedEvents : ARRAY[1..80] OF ST_ReadEventW;
+	LoggedEvents : ARRAY[1..80] OF ST_ReadEventW;//array to connect to the event table
 END_VAR
 
 VAR

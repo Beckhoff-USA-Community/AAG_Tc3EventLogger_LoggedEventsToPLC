@@ -66,6 +66,54 @@ ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetim
 .\build.ps1 -SkipDotNet        # PLC library only
 ```
 
+## PLC Function Block Usage
+
+### FB_ReadTc3Events2
+
+The `FB_ReadTc3Events2` function block extends the standard TwinCAT Event Logger functionality to integrate with the .NET application.
+
+**Declaration:**
+```iec
+VAR
+    fbReadTc3Events : FB_ReadTc3Events2;
+    bTrigger : BOOL;
+END_VAR
+```
+
+**Key Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `nLanguageID` | DINT | Language of event messages (1033=EN, 1031=DE, 2057=EN-UK) |
+| `eDateAndTimeFormat` | E_DateAndTimeFormat | Date/time format (0=de_DE, 1=en_GB, 2=en_US) |
+| `bClearLoggedTable` | BOOL | Clear the LoggedEvents array |
+| `TimeOut` | TIME | Timeout for .NET application response |
+| `LoggedEvents` | ARRAY[1..80] OF ST_ReadEventW | Array to connect to the event table  |
+
+**Usage Example:**
+```iec
+// Configure the function block
+fbReadTc3Events.nLanguageID := 1033;           // English US
+fbReadTc3Events.eDateAndTimeFormat := 2;       // MM/dd/yyyy format
+
+//Service the FB
+fbReadTc3Events();
+
+// Trigger event reading with rising edge
+IF bTrigger THEN
+    IF fbReadTc3Events.ReadLoggedEvents(bTrigger) THEN
+        // Events successfully retrieved
+        // Access via fbReadTc3Events.LoggedEvents[1..80]
+    END_IF
+END_IF
+```
+
+**ReadLoggedEvents Method:**
+- **Input**: `bExec` - Rising edge triggers the read operation
+- **Returns**: `BOOL` - TRUE if successful, FALSE if failed
+- **Output**: `hrErrorCode` - HRESULT error code if operation fails
+
+The method calls the .NET application asynchronously and populates the `LoggedEvents` array with formatted event data.
 
 ## Documentation
 
