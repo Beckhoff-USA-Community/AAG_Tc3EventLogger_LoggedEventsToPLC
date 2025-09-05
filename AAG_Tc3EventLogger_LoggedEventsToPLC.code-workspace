@@ -1,0 +1,102 @@
+{
+    "folders": [
+        {
+            "name": ".NET Application",
+            "path": "./dotnetLoggedEventsToPLC/ReadTc3Events2"
+        },
+        {
+            "name": "Project Root",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/.vs": true,
+            "**/bin": true,
+            "**/obj": true,
+            "**/Packages": true,
+            "**/build-artifacts": false,
+            "**/*.user": true
+        },
+        "search.exclude": {
+            "**/.vs": true,
+            "**/bin": true,
+            "**/obj": true,
+            "**/Packages": true,
+            "**/build-artifacts": true
+        },
+        "terminal.integrated.defaultProfile.windows": "PowerShell",
+        "powershell.integratedConsole.showOnStartup": false
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-dotnettools.csharp",
+            "ms-dotnettools.csdevkit",
+            "ms-dotnettools.vscode-dotnet-runtime",
+            "ms-vscode.powershell",
+            "redhat.vscode-xml",
+            "ms-vscode.vscode-json"
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Build Everything",
+                "type": "shell",
+                "command": "powershell.exe",
+                "args": [
+                    "-ExecutionPolicy", "Bypass",
+                    "-File", "./build.ps1"
+                ],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Build .NET Only",
+                "type": "shell",
+                "command": "powershell.exe",
+                "args": [
+                    "-ExecutionPolicy", "Bypass",
+                    "-File", "./build.ps1",
+                    "-SkipPlcLibrary"
+                ],
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Build PLC Library Only",
+                "type": "shell",
+                "command": "powershell.exe",
+                "args": [
+                    "-ExecutionPolicy", "Bypass",
+                    "-File", "./build.ps1",
+                    "-SkipDotNet"
+                ],
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "problemMatcher": []
+            }
+        ]
+    }
+}

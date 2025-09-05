@@ -1,0 +1,130 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ReadTc3Events2 (English - Local)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net8.0/ReadTc3Events2.dll",
+            "args": [
+                "--symbolpath", "MAIN.fbReadTc3Events",
+                "--languageid", "1033",
+                "--datetimeformat", "2"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "ReadTc3Events2 (English - Remote)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net8.0/ReadTc3Events2.dll",
+            "args": [
+                "--amsnetid", "39.120.71.102.1.1:851",
+                "--symbolpath", "MAIN.fbReadTc3Events",
+                "--languageid", "1033",
+                "--datetimeformat", "2"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "ReadTc3Events2 (German - Local)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net8.0/ReadTc3Events2.dll",
+            "args": [
+                "--symbolpath", "MAIN.fbReadTc3Events",
+                "--languageid", "1031",
+                "--datetimeformat", "0"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "ReadTc3Events2 (German - Remote)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net8.0/ReadTc3Events2.dll",
+            "args": [
+                "--amsnetid", "39.120.71.102.1.1:851",
+                "--symbolpath", "MAIN.fbReadTc3Events",
+                "--languageid", "1031",
+                "--datetimeformat", "0"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "ReadTc3Events2 (English UK - Local)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net8.0/ReadTc3Events2.dll",
+            "args": [
+                "--symbolpath", "MAIN.fbReadTc3Events",
+                "--languageid", "2057",
+                "--datetimeformat", "1"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "ReadTc3Events2 (English UK - Remote)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net8.0/ReadTc3Events2.dll",
+            "args": [
+                "--amsnetid", "39.120.71.102.1.1:851",
+                "--symbolpath", "MAIN.fbReadTc3Events",
+                "--languageid", "2057",
+                "--datetimeformat", "1"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "ReadTc3Events2 (Verbose - Local)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net8.0/ReadTc3Events2.dll",
+            "args": [
+                "--symbolpath", "MAIN.fbReadTc3Events",
+                "--languageid", "1033",
+                "--datetimeformat", "2",
+                "--verbose"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "ReadTc3Events2 (Error - Remote)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net8.0/ReadTc3Events2.dll",
+            "args": [
+                "--amsnetid", "39.120.71.102.1.1:851",
+                "--symbolpath", "MAIN.fbReadTc3Events",
+                "--languageid", "1033",
+                "--datetimeformat", "2"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        }
+    ]
+}

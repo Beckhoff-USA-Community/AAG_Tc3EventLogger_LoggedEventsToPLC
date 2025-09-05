@@ -31,6 +31,20 @@ This repository contains a proof-of-concept integration between TwinCAT Event Lo
 - **Purpose**: Development and testing environment for the integration
 - **Contains**: Sample implementations and test scenarios
 
+## Development Environment
+
+### VS Code Workspace
+The project includes a VS Code workspace configuration (`AAG_Tc3EventLogger_LoggedEventsToPLC.code-workspace`) with:
+- **Recommended Extensions**: C# Dev Kit, C#, PowerShell, XML support
+- **Build Tasks**: Accessible via `Ctrl+Shift+P` > "Tasks: Run Task"
+  - **Build Everything** - Run complete build.ps1 script (.NET + PLC Library)
+  - **Build .NET Only** - Run build.ps1 -SkipPlcLibrary  
+  - **Build PLC Library Only** - Run build.ps1 -SkipDotNet
+- **Debug Configurations**: All launchSettings.json profiles available for F5 debugging
+
+### VS Code Setup
+See `VSCode-Setup.md` for complete VS Code development environment setup instructions.
+
 ## Development Commands
 
 ### .NET Application
@@ -51,15 +65,16 @@ cd dotnetLoggedEventsToPLC
 
 **PowerShell Build Script Options:**
 ```powershell
-.\build.ps1                    # Build .NET applications for multi-platform deployment
-.\build.ps1 -SkipDotNet        # Skip .NET builds (currently no effect as PLC builds are disabled)
+.\build.ps1                    # Build everything (.NET applications + PLC library)
+.\build.ps1 -SkipDotNet        # Build PLC library only
+.\build.ps1 -SkipPlcLibrary    # Build .NET applications only  
+.\build.ps1 -InstallLibrary    # Build and install PLC library to TwinCAT repository
 ```
-
-**Note**: PLC library generation is temporarily disabled due to TwinCAT automation requirements. The PLC library must be manually created from the LoggedEventsToPLCLib project.
 
 **Build Script Output:**
 - `build-artifacts/freebsd/ReadTc3Events2/` - Framework-dependent build for TwinCAT/BSD (FreeBSD)
 - `build-artifacts/windows/ReadTc3Events2/` - Self-contained executable for Windows
+- `build-artifacts/plc-library/LoggedEventsToPLCLib.library` - PLC library file (when PLC build enabled)
 
 **Run the application:**
 ```bash
@@ -93,7 +108,13 @@ ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetim
 - **Remote German**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events --languageid 1031 --datetimeformat 0`
 - **Remote English UK**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events --languageid 2057 --datetimeformat 1`
 - **Verbose mode**: `--symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2 --verbose`
-- **Error testing**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Eventss --languageid 1033 --datetimeformat 2` (intentional typo in symbolpath)
+- **Error testing**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2` (intentional typo in symbolpath)
+
+### Testing
+
+**Error Testing**: The "Error - Remote" configuration can be used to test error handling by providing invalid parameters.
+
+**Verbose Logging**: Use `--verbose` flag to enable detailed logging to TwinCAT Event Logger for debugging.
 
 ### TwinCAT Projects
 

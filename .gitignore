@@ -63,7 +63,10 @@ project.lock.json
 nupkg/
 
 # Visual Studio Code
-.vscode
+.vscode/
+# But keep our configuration files
+!dotnetLoggedEventsToPLC/ReadTc3Events2/.vscode/
+!*.code-workspace
 
 # Rider
 .idea

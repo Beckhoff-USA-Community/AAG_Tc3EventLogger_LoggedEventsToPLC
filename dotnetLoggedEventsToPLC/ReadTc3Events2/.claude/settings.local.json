@@ -1,8 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet build)",
-      "WebFetch(domain:fisothemes.github.io)"
+      "Read(//c/Source/AAG_Tc3EventLogger_LoggedEventsToPLC/**)"
     ],
     "deny": [],
     "ask": []
