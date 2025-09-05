@@ -204,7 +204,9 @@
 	</DataTypes>
 	<Project ProjectGUID="{AF710953-CA2D-41B4-9EFE-9AC0C3F0DDA0}" TargetNetId="39.120.71.102.1.1" Target64Bit="true" SaveToTarget="false" HideSaveToTarget="true" ShowHideConfigurations="#x3c7">
 		<System>
-			<Settings MaxCpus="2"/>
+			<Settings MaxCpus="4">
+				<Cpu CpuId="3"/>
+			</Settings>
 			<Tasks>
 				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
 					<Name>PlcTask</Name>

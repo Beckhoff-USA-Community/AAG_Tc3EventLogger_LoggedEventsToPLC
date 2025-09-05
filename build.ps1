@@ -165,13 +165,13 @@ Write-Host "====================================================================
 
 if (-not $SkipDotNet) {
     Write-Host "TwinCAT/BSD (FreeBSD): .\build-artifacts\freebsd\ReadTc3Events2\" -ForegroundColor White
-    Write-Host "  - Copy entire ReadTc3Events2 folder to /usr/local/etc/TwinCAT/3.1/Components/Plc" -ForegroundColor Gray
+    Write-Host "  - Copy entire ReadTc3Events2 folder to /usr/local/etc/TwinCAT/3.1/Components" -ForegroundColor Gray
     Write-Host "  - Run: dotnet ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2" -ForegroundColor Gray
-    Write-Host "  - Requires: pkg install dotnet-runtime" -ForegroundColor Gray
+    Write-Host "  - Requires: doas pkg install dotnet-runtime" -ForegroundColor Gray
     Write-Host ""
     
     Write-Host "Windows: .\build-artifacts\windows\ReadTc3Events2\ReadTc3Events2.exe" -ForegroundColor White
-    Write-Host "  - Copy entire ReadTc3Events2 folder to C:\Program Files (x86)\Beckhoff\TwinCAT\3.1\Components\Plc, or just the .exe" -ForegroundColor Gray
+    Write-Host "  - Copy entire ReadTc3Events2 folder to C:\Program Files (x86)\Beckhoff\TwinCAT\3.1\Components" -ForegroundColor Gray
     Write-Host "  - Run: ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2" -ForegroundColor Gray
     Write-Host ""
 }

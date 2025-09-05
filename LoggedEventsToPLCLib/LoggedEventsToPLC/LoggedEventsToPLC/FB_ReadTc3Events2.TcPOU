@@ -17,15 +17,15 @@ VAR
 	DeviceInfo : FB_GetDeviceIdentificationEx;
 	{attribute 'instance-path'}
 	{attribute 'noinit'}
-	sPath			   : T_MAXSTRING;
+	ThisFBPath		   : T_MAXSTRING;
 	CallReadTc3Events2 : NT_StartProcess;
 	fbArgsFormat	   : FB_FormatString2;
+	ArgsFormat		   : T_MAXSTRING := 'ReadTc3Events2.dll --symbolpath %s --languageid %d --datetimeformat %d ';
 	ReadTc3Events2Args : T_MAXSTRING;
 	ReadTc3Events2Done : BOOL;
 END_VAR
 
 VAR CONSTANT
-	ArgsFormat : T_MAXSTRING := 'ReadTc3Events2.dll --symbolpath %s --languageid %d --datetimeformat %d ';
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[SUPER^();
@@ -39,9 +39,14 @@ IF Init THEN
 		DeviceInfo(bExecute := FALSE);
 
 		//Set paths based on target system OS
-		IF DeviceInfo.stDevIdent.strImageOsName = 'TwinCAT/BSD' THEN
-			CallReadTc3Events2.PATHSTR := '/usr/local/bin/dotnet'; //doas pkg install dotnet
-			CallReadTc3Events2.DIRNAME := '/usr/local/etc/TwinCAT/3.1/Components/Plc/ReadTc3Events2';
+		IF FIND(DeviceInfo.stDevIdent.strImageOsName, 'TwinCAT/BSD') > 0 THEN
+			CallReadTc3Events2.PATHSTR := '/usr/local/bin/dotnet'; //doas pkg install dotnet-runtime
+			CallReadTc3Events2.DIRNAME := '/usr/local/etc/TwinCAT/3.1/Components/ReadTc3Events2';
+			ArgsFormat				   := 'ReadTc3Events2.dll --symbolpath %s --languageid %d --datetimeformat %d ';
+		ELSIF FIND(DeviceInfo.stDevIdent.strImageOsName, 'Windows') > 0 THEN
+			CallReadTc3Events2.DIRNAME := 'C:\Program Files (x86)\Beckhoff\TwinCAT\3.1\Components\ReadTc3Events2';
+			CallReadTc3Events2.PATHSTR := 'C:\Program Files (x86)\Beckhoff\TwinCAT\3.1\Components\ReadTc3Events2\ReadTc3Events2.exe';
+			ArgsFormat				   := '--symbolpath %s --languageid %d --datetimeformat %d ';
 		END_IF
 
 		Init := FALSE;
@@ -82,26 +87,24 @@ TC_EVENTS.Win32EventClass;
 //Trim the project name, and PLC name from the function block instance path
 
 // Find first dot
-nFirstPos := FIND2(ADR(sPath), ADR(sDot));
+nFirstPos := FIND2(ADR(ThisFBPath), ADR(sDot));
 IF nFirstPos > 0 THEN
 	// Find second dot by searching from just after the first one
-	nSecondPosRel := FIND2(ADR(sPath) + nFirstPos, ADR(sDot));
+	nSecondPosRel := FIND2(ADR(ThisFBPath) + nFirstPos, ADR(sDot));
 	IF nSecondPosRel > 0 THEN
 		// Convert relative position to absolute (1-based indexing)
 		nSecondPosAbs := nFirstPos + nSecondPosRel;
 
 		// Remove everything from start through the second dot
 		nRemoveLen := nSecondPosAbs;
-		bOk		   := REPLACE2(pSrcString	 := ADR(sPath),
+		bOk		   := REPLACE2(pSrcString	 := ADR(ThisFBPath),
 							   pInsertString := ADR(sEmpty),
 							   pDstString	 := ADR(sTmpOut),
 							   nDstSize		 := SIZEOF(sTmpOut),
 							   nLen			 := nRemoveLen,
 							   nPos			 := 1);
 
-		// Overwrite sPath with the result (even if truncated)
-		//sPath := CONCAT(sTmpOut, '.LoggedEvents');
-		sPath := sTmpOut;
+		ThisFBPath := sTmpOut;
 	END_IF
 END_IF]]></ST>
       </Implementation>
@@ -132,7 +135,7 @@ END_VAR]]></Declaration>
 		hrErrorCode		   := 0;
 		DoneTimeOut(IN := FALSE, PT := TimeOut);
 		fbArgsFormat(pFormatString := ADR(ArgsFormat),
-					 arg1		   := F_STRING(sPath),
+					 arg1		   := F_STRING(ThisFBPath),
 					 arg2		   := F_DINT(THIS^.nLanguageID),
 					 arg3		   := F_INT(THIS^.eDateAndTimeFormat),
 					 pDstString	   := ADR(ReadTc3Events2Args),
