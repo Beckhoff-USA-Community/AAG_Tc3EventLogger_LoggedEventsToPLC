@@ -47,8 +47,11 @@
                 "command": "powershell.exe",
                 "args": [
                     "-ExecutionPolicy", "Bypass",
-                    "-File", "./build.ps1"
+                    "-File", "${workspaceFolder:Project Root}/build.ps1"
                 ],
+                "options": {
+                    "cwd": "${workspaceFolder:Project Root}"
+                },
                 "group": {
                     "kind": "build",
                     "isDefault": true
@@ -67,9 +70,12 @@
                 "command": "powershell.exe",
                 "args": [
                     "-ExecutionPolicy", "Bypass",
-                    "-File", "./build.ps1",
+                    "-File", "${workspaceFolder:Project Root}/build.ps1",
                     "-SkipPlcLibrary"
                 ],
+                "options": {
+                    "cwd": "${workspaceFolder:Project Root}"
+                },
                 "group": "build",
                 "presentation": {
                     "echo": true,
@@ -85,9 +91,12 @@
                 "command": "powershell.exe",
                 "args": [
                     "-ExecutionPolicy", "Bypass",
-                    "-File", "./build.ps1",
+                    "-File", "${workspaceFolder:Project Root}/build.ps1",
                     "-SkipDotNet"
                 ],
+                "options": {
+                    "cwd": "${workspaceFolder:Project Root}"
+                },
                 "group": "build",
                 "presentation": {
                     "echo": true,
@@ -96,6 +105,235 @@
                     "panel": "shared"
                 },
                 "problemMatcher": []
+            },
+            {
+                "label": "Build (.NET Project Debug)",
+                "command": "dotnet",
+                "type": "process",
+                "args": [
+                    "build",
+                    "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj",
+                    "/property:GenerateFullPaths=true",
+                    "/consoleloggerparameters:NoSummary"
+                ],
+                "problemMatcher": "$msCompile",
+                "group": "build"
+            },
+            {
+                "label": "Build (.NET Project Release)",
+                "command": "dotnet",
+                "type": "process",
+                "args": [
+                    "build",
+                    "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj",
+                    "-c",
+                    "Release",
+                    "/property:GenerateFullPaths=true",
+                    "/consoleloggerparameters:NoSummary"
+                ],
+                "problemMatcher": "$msCompile",
+                "group": "build"
+            },
+            {
+                "label": "Clean (.NET Project)",
+                "command": "dotnet",
+                "type": "process",
+                "args": [
+                    "clean",
+                    "${workspaceFolder}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj"
+                ],
+                "problemMatcher": "$msCompile",
+                "group": "build"
+            },
+            {
+                "label": "Restore (.NET Project)",
+                "command": "dotnet",
+                "type": "process",
+                "args": [
+                    "restore",
+                    "${workspaceFolder}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj"
+                ],
+                "problemMatcher": "$msCompile",
+                "group": "build"
+            },
+            {
+                "label": "Run Local English (.NET Project)",
+                "command": "dotnet",
+                "type": "process",
+                "args": [
+                    "run",
+                    "--project",
+                    "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj",
+                    "--",
+                    "--symbolpath",
+                    "MAIN.fbReadTc3Events",
+                    "--languageid",
+                    "1033",
+                    "--datetimeformat",
+                    "2"
+                ],
+                "group": "test",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                }
+            },
+            {
+                "label": "Run Verbose (.NET Project)",
+                "command": "dotnet",
+                "type": "process",
+                "args": [
+                    "run",
+                    "--project",
+                    "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj",
+                    "--",
+                    "--symbolpath",
+                    "MAIN.fbReadTc3Events",
+                    "--languageid",
+                    "1033",
+                    "--datetimeformat",
+                    "2",
+                    "--verbose"
+                ],
+                "group": "test",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                }
+            }
+        ]
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "ReadTc3Events2 (English - Local)",
+                "type": "coreclr",
+                "request": "launch",
+                "preLaunchTask": "Build .NET Only",
+                "program": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/bin/Debug/net8.0/ReadTc3Events2.dll",
+                "args": [
+                    "--symbolpath", "MAIN.fbReadTc3Events",
+                    "--languageid", "1033",
+                    "--datetimeformat", "2"
+                ],
+                "cwd": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2",
+                "console": "internalConsole",
+                "stopAtEntry": false
+            },
+            {
+                "name": "ReadTc3Events2 (English - Remote)",
+                "type": "coreclr",
+                "request": "launch",
+                "preLaunchTask": "Build .NET Only",
+                "program": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/bin/Debug/net8.0/ReadTc3Events2.dll",
+                "args": [
+                    "--amsnetid", "39.120.71.102.1.1:851",
+                    "--symbolpath", "MAIN.fbReadTc3Events",
+                    "--languageid", "1033",
+                    "--datetimeformat", "2"
+                ],
+                "cwd": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2",
+                "console": "internalConsole",
+                "stopAtEntry": false
+            },
+            {
+                "name": "ReadTc3Events2 (German - Local)",
+                "type": "coreclr",
+                "request": "launch",
+                "preLaunchTask": "Build .NET Only",
+                "program": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/bin/Debug/net8.0/ReadTc3Events2.dll",
+                "args": [
+                    "--symbolpath", "MAIN.fbReadTc3Events",
+                    "--languageid", "1031",
+                    "--datetimeformat", "0"
+                ],
+                "cwd": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2",
+                "console": "internalConsole",
+                "stopAtEntry": false
+            },
+            {
+                "name": "ReadTc3Events2 (German - Remote)",
+                "type": "coreclr",
+                "request": "launch",
+                "preLaunchTask": "Build .NET Only",
+                "program": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/bin/Debug/net8.0/ReadTc3Events2.dll",
+                "args": [
+                    "--amsnetid", "39.120.71.102.1.1:851",
+                    "--symbolpath", "MAIN.fbReadTc3Events",
+                    "--languageid", "1031",
+                    "--datetimeformat", "0"
+                ],
+                "cwd": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2",
+                "console": "internalConsole",
+                "stopAtEntry": false
+            },
+            {
+                "name": "ReadTc3Events2 (English UK - Local)",
+                "type": "coreclr",
+                "request": "launch",
+                "preLaunchTask": "Build .NET Only",
+                "program": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/bin/Debug/net8.0/ReadTc3Events2.dll",
+                "args": [
+                    "--symbolpath", "MAIN.fbReadTc3Events",
+                    "--languageid", "2057",
+                    "--datetimeformat", "1"
+                ],
+                "cwd": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2",
+                "console": "internalConsole",
+                "stopAtEntry": false
+            },
+            {
+                "name": "ReadTc3Events2 (English UK - Remote)",
+                "type": "coreclr",
+                "request": "launch",
+                "preLaunchTask": "Build .NET Only",
+                "program": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/bin/Debug/net8.0/ReadTc3Events2.dll",
+                "args": [
+                    "--amsnetid", "39.120.71.102.1.1:851",
+                    "--symbolpath", "MAIN.fbReadTc3Events",
+                    "--languageid", "2057",
+                    "--datetimeformat", "1"
+                ],
+                "cwd": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2",
+                "console": "internalConsole",
+                "stopAtEntry": false
+            },
+            {
+                "name": "ReadTc3Events2 (Verbose - Local)",
+                "type": "coreclr",
+                "request": "launch",
+                "preLaunchTask": "Build .NET Only",
+                "program": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/bin/Debug/net8.0/ReadTc3Events2.dll",
+                "args": [
+                    "--symbolpath", "MAIN.fbReadTc3Events",
+                    "--languageid", "1033",
+                    "--datetimeformat", "2",
+                    "--verbose"
+                ],
+                "cwd": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2",
+                "console": "internalConsole",
+                "stopAtEntry": false
+            },
+            {
+                "name": "ReadTc3Events2 (Error - Remote)",
+                "type": "coreclr",
+                "request": "launch",
+                "preLaunchTask": "Build .NET Only",
+                "program": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/bin/Debug/net8.0/ReadTc3Events2.dll",
+                "args": [
+                    "--amsnetid", "39.120.71.102.1.1:851",
+                    "--symbolpath", "MAIN.fbReadTc3Eventss",
+                    "--languageid", "1033",
+                    "--datetimeformat", "2"
+                ],
+                "cwd": "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2",
+                "console": "internalConsole",
+                "stopAtEntry": false
             }
         ]
     }

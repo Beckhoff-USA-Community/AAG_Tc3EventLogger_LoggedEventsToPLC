@@ -64,9 +64,17 @@ nupkg/
 
 # Visual Studio Code
 .vscode/
-# But keep our configuration files
-!dotnetLoggedEventsToPLC/ReadTc3Events2/.vscode/
+# But keep workspace files
 !*.code-workspace
+
+# Claude Code configuration and files
+.claude/
+claude.md
+CLAUDE.md
+claude-*.txt
+claude-*.log
+*-claude-*
+*.claude
 
 # Rider
 .idea
