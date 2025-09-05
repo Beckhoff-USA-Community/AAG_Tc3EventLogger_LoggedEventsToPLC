@@ -100,7 +100,8 @@ IF nFirstPos > 0 THEN
 							   nPos			 := 1);
 
 		// Overwrite sPath with the result (even if truncated)
-		sPath := CONCAT(sTmpOut, '.LoggedEvents');
+		//sPath := CONCAT(sTmpOut, '.LoggedEvents');
+		sPath := sTmpOut;
 	END_IF
 END_IF]]></ST>
       </Implementation>
@@ -126,8 +127,9 @@ VAR_INST
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[CASE Step OF
-	0:
+	0: //Trigger NT start process
 		ReadTc3Events2Done := FALSE;
+		hrErrorCode		   := 0;
 		DoneTimeOut(IN := FALSE, PT := TimeOut);
 		fbArgsFormat(pFormatString := ADR(ArgsFormat),
 					 arg1		   := F_STRING(sPath),
@@ -146,27 +148,27 @@ END_VAR]]></Declaration>
 		CallReadTc3Events2.START := TRUE;
 		Step					 := 10;
 
-	10:
+	10: //Wait for NT_StartProcess to finish
 		IF NOT CallReadTc3Events2.BUSY THEN
 			IF NOT CallReadTc3Events2.ERR THEN
-				hrErrorCode		 := 0;
-				ReadLoggedEvents := TRUE;
+				Step := 15;
 			ELSE
 				hrErrorCode		 := TO_DINT(CallReadTc3Events2.ERRID);
 				ReadLoggedEvents := FALSE;
+				bExec			 := FALSE;
+				Step			 := 0;
 			END_IF
 
-			bExec					 := FALSE;
-			Step					 := 0;
 			CallReadTc3Events2.START := FALSE;
 		END_IF
 
-	15:
+	15: //Wait for ReadTc3Events2 to finish
 		DoneTimeOut(IN := TRUE);
 		IF ReadTc3Events2Done THEN
-			hrErrorCode := E_HRESULTAdsErr.HRESULT_ADS_NOERROR;
-			bExec		:= FALSE;
-			Step		:= 0;
+			hrErrorCode		 := E_HRESULTAdsErr.HRESULT_ADS_NOERROR;
+			ReadLoggedEvents := TRUE;
+			bExec			 := FALSE;
+			Step			 := 0;
 		ELSIF DoneTimeOut.Q THEN
 			ReadLoggedEvents := FALSE;
 			hrErrorCode		 := E_HRESULTAdsErr.TIMEOUT;

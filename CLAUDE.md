@@ -65,10 +65,10 @@ cd dotnetLoggedEventsToPLC
 ```bash
 cd dotnetLoggedEventsToPLC/ReadTc3Events2
 # Local TwinCAT (uses default 127.0.0.1.1.1:851)
-dotnet run -- --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2
+dotnet run -- --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2
 
 # Remote TwinCAT
-dotnet run -- --amsnetid <AMS_NET_ID>:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2
+dotnet run -- --amsnetid <AMS_NET_ID>:851 --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2
 ```
 
 **Deployment Examples:**
@@ -76,24 +76,24 @@ dotnet run -- --amsnetid <AMS_NET_ID>:851 --symbolpath MAIN.fbReadTc3Events.Logg
 *TwinCAT/BSD (FreeBSD):*
 ```bash
 # Copy build-artifacts/freebsd/ReadTc3Events2/ folder to target, then run:
-dotnet ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2
+dotnet ReadTc3Events2.dll --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2
 ```
 
 *Windows:*
 ```bash
 # Copy build-artifacts/windows/ReadTc3Events2/ folder to target, then run:
-ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2
+ReadTc3Events2.exe --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2
 ```
 
 **Development runs (from launchSettings.json):**
-- **Local English**: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2`
-- **Local German**: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0`
-- **Local English UK**: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 2057 --datetimeformat 1`
-- **Remote English**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2`
-- **Remote German**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1031 --datetimeformat 0`
-- **Remote English UK**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 2057 --datetimeformat 1`
-- **Verbose mode**: `--symbolpath MAIN.fbReadTc3Events.LoggedEvents --languageid 1033 --datetimeformat 2 --verbose`
-- **Error testing**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events.LoggedEventss --languageid 1033 --datetimeformat 2` (intentional typo in symbolpath)
+- **Local English**: `--symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2`
+- **Local German**: `--symbolpath MAIN.fbReadTc3Events --languageid 1031 --datetimeformat 0`
+- **Local English UK**: `--symbolpath MAIN.fbReadTc3Events --languageid 2057 --datetimeformat 1`
+- **Remote English**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2`
+- **Remote German**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events --languageid 1031 --datetimeformat 0`
+- **Remote English UK**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events --languageid 2057 --datetimeformat 1`
+- **Verbose mode**: `--symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2 --verbose`
+- **Error testing**: `--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Eventss --languageid 1033 --datetimeformat 2` (intentional typo in symbolpath)
 
 ### TwinCAT Projects
 
@@ -140,10 +140,16 @@ The core data structure for event transfer between .NET and PLC:
 
 ### Command Line Arguments
 - `--amsnetid`: (Optional) TwinCAT AMS Net ID with port (format: x.x.x.x.x.x:port). Defaults to 127.0.0.1.1.1:851 for local connections
-- `--symbolpath`: Full PLC symbol path to event array
+- `--symbolpath`: PLC symbol path to function block instance (e.g., MAIN.fbReadTc3Events)
 - `--languageid`: Language ID (1033=English US, 1031=German, 2057=English UK)
 - `--datetimeformat`: Format enum (0=de_DE, 1=en_GB, 2=en_US)
 - `--verbose`: Enable verbose logging to TwinCAT Event Logger
+
+**Symbol Path Behavior:**
+- The application expects the path to the function block instance (e.g., `MAIN.fbReadTc3Events`)
+- It automatically appends `.LoggedEvents` to access the event array
+- It automatically appends `.ReadTc3EventsDone` to set the completion flag
+- When the operation completes successfully, `ReadTc3EventsDone` is set to `TRUE`
 
 ## Application Flow
 

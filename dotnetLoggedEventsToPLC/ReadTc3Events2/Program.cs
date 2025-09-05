@@ -44,8 +44,12 @@ try
     LogToTwinCAT(logger, "Arguments validated successfully", SeverityLevelEnum.Info, options.Verbose);
     LogToTwinCAT(logger, "Connected to TwinCAT Event Logger and ADS Client", SeverityLevelEnum.Info, options.Verbose);
     
-    int arraySize = ValidateAndGetArraySize(adsClient, options.SymbolPath);
-    LogToTwinCAT(logger, $"Array size determined: {arraySize} elements", SeverityLevelEnum.Info, options.Verbose);
+    // Build the full symbol paths for the function block
+    string arraySymbolPath = $"{options.SymbolPath}.LoggedEvents";
+    string doneSymbolPath = $"{options.SymbolPath}.ReadTc3Events2Done";
+    
+    int arraySize = ValidateAndGetArraySize(adsClient, arraySymbolPath);
+    LogToTwinCAT(logger, $"Array size determined: {arraySize} elements for {arraySymbolPath}", SeverityLevelEnum.Info, options.Verbose);
     
     var events = GetLoggedEvents(logger, arraySize);
     LogToTwinCAT(logger, $"Retrieved {events.Count} logged events from TwinCAT", SeverityLevelEnum.Info, options.Verbose);
@@ -53,10 +57,14 @@ try
     var plcEvents = ProcessEvents(events, arraySize, options.LanguageId, options.DateTimeFormat);
     LogToTwinCAT(logger, $"Processed {plcEvents.Count} events for PLC format", SeverityLevelEnum.Info, options.Verbose);
     
-    WriteEventsToPlc(adsClient, options.SymbolPath, plcEvents, arraySize);
+    WriteEventsToPlc(adsClient, arraySymbolPath, plcEvents, arraySize);
     LogToTwinCAT(logger, $"Successfully wrote {plcEvents.Count} events to PLC array", SeverityLevelEnum.Info, options.Verbose);
+
+    // Set completion flag
+    adsClient.WriteValue(doneSymbolPath, true);
+    LogToTwinCAT(logger, $"Set completion flag {doneSymbolPath} = true", SeverityLevelEnum.Info, options.Verbose);
     
-    Console.WriteLine($"Successfully wrote {plcEvents.Count} events to PLC array: {options.SymbolPath}");
+    Console.WriteLine($"Successfully wrote {plcEvents.Count} events to PLC array: {arraySymbolPath}");
     LogToTwinCAT(logger, "Session completed successfully", SeverityLevelEnum.Info, options.Verbose);
     
     CleanupConnections(logger, adsClient);
