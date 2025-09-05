@@ -30,7 +30,7 @@
     },
     "ReadTc3Events2 (Error - Remote)": {
       "commandName": "Project",
-      "commandLineArgs": "--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2"
+      "commandLineArgs": "--amsnetid 39.120.71.102.1.1:851 --symbolpath MAIN.fbReadTc3Eventsss --languageid 1033 --datetimeformat 2"
     }
   }
 }

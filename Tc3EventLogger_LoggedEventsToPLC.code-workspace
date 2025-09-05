@@ -140,7 +140,7 @@
                 "type": "process",
                 "args": [
                     "clean",
-                    "${workspaceFolder}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj"
+                    "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj"
                 ],
                 "problemMatcher": "$msCompile",
                 "group": "build"
@@ -151,59 +151,10 @@
                 "type": "process",
                 "args": [
                     "restore",
-                    "${workspaceFolder}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj"
+                    "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj"
                 ],
                 "problemMatcher": "$msCompile",
                 "group": "build"
-            },
-            {
-                "label": "Run Local English (.NET Project)",
-                "command": "dotnet",
-                "type": "process",
-                "args": [
-                    "run",
-                    "--project",
-                    "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj",
-                    "--",
-                    "--symbolpath",
-                    "MAIN.fbReadTc3Events",
-                    "--languageid",
-                    "1033",
-                    "--datetimeformat",
-                    "2"
-                ],
-                "group": "test",
-                "presentation": {
-                    "echo": true,
-                    "reveal": "always",
-                    "focus": false,
-                    "panel": "shared"
-                }
-            },
-            {
-                "label": "Run Verbose (.NET Project)",
-                "command": "dotnet",
-                "type": "process",
-                "args": [
-                    "run",
-                    "--project",
-                    "${workspaceFolder:Project Root}/dotnetLoggedEventsToPLC/ReadTc3Events2/ReadTc3Events2.csproj",
-                    "--",
-                    "--symbolpath",
-                    "MAIN.fbReadTc3Events",
-                    "--languageid",
-                    "1033",
-                    "--datetimeformat",
-                    "2",
-                    "--verbose"
-                ],
-                "group": "test",
-                "presentation": {
-                    "echo": true,
-                    "reveal": "always",
-                    "focus": false,
-                    "panel": "shared"
-                }
             }
         ]
     },

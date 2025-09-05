@@ -7,7 +7,7 @@ This guide will help you set up Visual Studio Code (VS Code) for this TwinCAT Ev
 ### Install VS Code and Extensions
 
 1. **Download VS Code** from [https://code.visualstudio.com/](https://code.visualstudio.com/) if needed
-2. **Open the workspace**: `File` → `Open Workspace from File...` → select `AAG_Tc3EventLogger_LoggedEventsToPLC.code-workspace`
+2. **Open the workspace**: `File` → `Open Workspace from File...` → select `Tc3EventLogger_LoggedEventsToPLC.code-workspace`
 3. **Install extensions**: VS Code will prompt to install recommended extensions (C# Dev Kit, PowerShell, etc.) - click "Install All"
 
 ### Project Structure
@@ -47,9 +47,9 @@ Open integrated terminal (`Ctrl+``) for direct commands:
 # .NET only
 .\build.ps1 -SkipPlcLibrary
 
-# Manual run
-cd dotnetLoggedEventsToPLC\ReadTc3Events2
-dotnet run -- --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2
+# Manual run (use debug configurations instead)
+# cd dotnetLoggedEventsToPLC\ReadTc3Events2
+# dotnet run -- --symbolpath MAIN.fbReadTc3Events --languageid 1033 --datetimeformat 2
 ```
 
 ## Folder Structure

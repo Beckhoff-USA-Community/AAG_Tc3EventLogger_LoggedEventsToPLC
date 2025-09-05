@@ -34,7 +34,7 @@ This repository contains a proof-of-concept integration between TwinCAT Event Lo
 ## Development Environment
 
 ### VS Code Workspace
-The project includes a VS Code workspace configuration (`AAG_Tc3EventLogger_LoggedEventsToPLC.code-workspace`) with:
+The project includes a VS Code workspace configuration (`Tc3EventLogger_LoggedEventsToPLC.code-workspace`) with:
 - **Recommended Extensions**: C# Dev Kit, C#, PowerShell, XML support
 - **Build Tasks**: Accessible via `Ctrl+Shift+P` > "Tasks: Run Task"
   - **Build Everything** - Run complete build.ps1 script (.NET + PLC Library)
