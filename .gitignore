@@ -1,0 +1,116 @@
+# Created by https://www.toptal.com/developers/gitignore/api/twincat3
+# Edit at https://www.toptal.com/developers/gitignore?templates=twincat3
+
+### TwinCAT3 ###
+# TwinCAT3 Stack Base
+
+# TwinCAT 3.1
+
+# include suggestions from GitHub: https://github.com/github/gitignore/pull/3092
+#
+# website: https://www.beckhoff.com/twincat3/
+
+# TwinCAT3 PLC
+*.plcproj.bak
+*.plcproj.orig
+*.tpy
+*.tclrs
+*.compiled-library
+*.library
+*.compileinfo
+LineIDs.dbg
+LineIDs.dbg.bak
+
+# Don't include the tmc-file rule if either of the following is true:
+#   1. You've got TwinCAT C++ projects, as the information in the TMC-file is created manually for the C++ projects (in that case, only (manually) ignore the tmc-files for the PLC projects)
+#   2. You've created a standalone PLC-project and added events to it, as these are stored in the TMC-file.
+#   3. shared tmc files are used to exchange data types that should be persisted in the project
+*.tmc
+*.tmcRefac
+
+# TwinCAT3 project files
+*.tsproj.bak
+*.tsproj.orig
+*.xti.bak
+*.xti.orig
+*.project.~u
+
+# folders that should be excluded
+_Boot/
+_CompileInfo/
+_Libraries/
+_ModuleInstall/
+_Deployment/
+_Repository/
+
+### TwinCAT3.VisualStudio Stack ###
+VisualStudio.gitignore
+
+
+### TwinCAT3.OpenFrameworks Stack ###
+OpenFrameworks.gitignore
+
+
+# End of https://www.toptal.com/developers/gitignore/api/twincat3
+
+
+##dotnet core
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+nupkg/
+
+# Visual Studio Code
+.vscode/
+# But keep workspace files
+!*.code-workspace
+
+# Claude Code configuration and files
+.claude/
+claude.md
+CLAUDE.md
+claude-*.txt
+claude-*.log
+*-claude-*
+*.claude
+
+# Rider
+.idea
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# Visual Studio 2015
+.vs/
+
+dotnetLoggedEventsToPLC/Packages/
+*.~u
+
+# Build artifacts - users should compile their own
+dotnetLoggedEventsToPLC/publish-*/
+build-artifacts/
+
+TwinCAT Project Event Generator/TwinCAT Project Event Generator/_Config/PLC1/PLC1 Instance.xtv
+
+TwinCAT Project Event Generator/TwinCAT Project Event Generator/_Config/PLC1/PLC1 Instance.xtv.bak

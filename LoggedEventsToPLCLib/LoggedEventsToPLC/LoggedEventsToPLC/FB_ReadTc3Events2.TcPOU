@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_ReadTc3Events2" Id="{01587a58-31a5-42fd-8251-f61e09cebdf0}" SpecialFunc="None">
+    <Declaration><![CDATA[{attribute 'reflection'}
+FUNCTION_BLOCK FB_ReadTc3Events2 EXTENDS FB_ReadTc3Events
+VAR_INPUT
+	bClearLoggedTable : BOOL;//clear the output LoggedEvents array
+	TimeOut			  : TIME := DEFAULT_ADS_TIMEOUT;//timeout to wait for logged events to finish being sent
+END_VAR
+
+VAR_OUTPUT
+	LoggedEvents : ARRAY[1..80] OF ST_ReadEventW;//array to connect to the event table
+END_VAR
+
+VAR
+	Init	   : BOOL := TRUE;
+	DeviceInfo : FB_GetDeviceIdentificationEx;
+	{attribute 'instance-path'}
+	{attribute 'noinit'}
+	ThisFBPath		   : T_MAXSTRING;
+	CallReadTc3Events2 : NT_StartProcess;
+	fbArgsFormat	   : FB_FormatString2;
+	ArgsFormat		   : T_MAXSTRING := 'ReadTc3Events2.dll --symbolpath %s --languageid %d --datetimeformat %d ';
+	ReadTc3Events2Args : T_MAXSTRING;
+	ReadTc3Events2Done : BOOL;
+END_VAR
+
+VAR CONSTANT
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[SUPER^();
+IF bClearLoggedTable THEN
+	MEMSET(ADR(LoggedEvents), 0, SIZEOF(LoggedEvents));
+END_IF
+
+IF Init THEN
+	DeviceInfo(bExecute := TRUE, sNetId := '');
+	IF NOT DeviceInfo.bBusy THEN
+		DeviceInfo(bExecute := FALSE);
+
+		//Set paths based on target system OS
+		IF FIND(DeviceInfo.stDevIdent.strImageOsName, 'TwinCAT/BSD') > 0 THEN
+			CallReadTc3Events2.PATHSTR := '/usr/local/bin/dotnet'; //doas pkg install dotnet-runtime
+			CallReadTc3Events2.DIRNAME := '/usr/local/etc/TwinCAT/3.1/Components/ReadTc3Events2';
+			ArgsFormat				   := 'ReadTc3Events2.dll --symbolpath %s --languageid %d --datetimeformat %d ';
+		ELSIF FIND(DeviceInfo.stDevIdent.strImageOsName, 'Windows') > 0 THEN
+			CallReadTc3Events2.DIRNAME := 'C:\Program Files (x86)\Beckhoff\TwinCAT\3.1\Components\ReadTc3Events2';
+			CallReadTc3Events2.PATHSTR := 'C:\Program Files (x86)\Beckhoff\TwinCAT\3.1\Components\ReadTc3Events2\ReadTc3Events2.exe';
+			ArgsFormat				   := '--symbolpath %s --languageid %d --datetimeformat %d ';
+		END_IF
+
+		Init := FALSE;
+	END_IF
+END_IF
+
+CallReadTc3Events2(NETID := '', COMNDLINE := ReadTc3Events2Args);]]></ST>
+    </Implementation>
+    <Method Name="FB_Init" Id="{84d1edc6-2bb3-4104-a74a-666444e82c6e}">
+      <Declaration><![CDATA[//FB_Init is always available implicitly and it is used primarily for initialization.
+
+//The return value is not evaluated. For a specific influence, you can also declare the
+
+//methods explicitly and provide additional code there with the standard initialization
+
+//code. You can evaluate the return value.
+METHOD FB_Init : BOOL
+VAR_INPUT
+	bInitRetains : BOOL; // TRUE: the retain variables are initialized (reset warm / reset cold)
+	bInCopyCode	 : BOOL; // TRUE: the instance will be copied to the copy code afterward (online change)   
+END_VAR
+
+VAR
+	sDot		  : STRING(2) := '.';
+	sEmpty		  : STRING(1) := ''; // replacement = empty
+	sTmpOut		  : STRING(255);	 // <-- set >= max length of sPath
+	nFirstPos	  : UDINT;
+	nSecondPosRel : UDINT;
+	nSecondPosAbs : UDINT;
+	nRemoveLen	  : UDINT;
+	bOk			  : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//Use the Win32EventClass - so event logger knows about Win32EventClass GUID. Used by the dotnet application
+{attribute 'analysis' := '-C0139'}
+TC_EVENTS.Win32EventClass;
+
+//Trim the project name, and PLC name from the function block instance path
+
+// Find first dot
+nFirstPos := FIND2(ADR(ThisFBPath), ADR(sDot));
+IF nFirstPos > 0 THEN
+	// Find second dot by searching from just after the first one
+	nSecondPosRel := FIND2(ADR(ThisFBPath) + nFirstPos, ADR(sDot));
+	IF nSecondPosRel > 0 THEN
+		// Convert relative position to absolute (1-based indexing)
+		nSecondPosAbs := nFirstPos + nSecondPosRel;
+
+		// Remove everything from start through the second dot
+		nRemoveLen := nSecondPosAbs;
+		bOk		   := REPLACE2(pSrcString	 := ADR(ThisFBPath),
+							   pInsertString := ADR(sEmpty),
+							   pDstString	 := ADR(sTmpOut),
+							   nDstSize		 := SIZEOF(sTmpOut),
+							   nLen			 := nRemoveLen,
+							   nPos			 := 1);
+
+		ThisFBPath := sTmpOut;
+	END_IF
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ReadLoggedEvents" Id="{2c2cea63-0b0b-4053-946e-4b8677152532}">
+      <Declaration><![CDATA[//A rising edge on the input parameter bExec triggers the Read procedure. 
+
+//The asynchronous process is terminated as soon as the reference bExec is set back to FALSE from the method. 
+
+//When the process ends, the return value of the method indicates whether the call to ReadTc3Events2 was successful (TRUE) or failed (FALSE) for the duration of one call.
+METHOD ReadLoggedEvents : BOOL;
+VAR_INPUT
+	bExec : REFERENCE TO BOOL;
+END_VAR
+
+VAR_OUTPUT
+	hrErrorCode : HRESULT;
+END_VAR
+
+VAR_INST
+	Step		: UDINT;
+	DoneTimeOut : TON;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE Step OF
+	0: //Trigger NT start process
+		ReadTc3Events2Done := FALSE;
+		hrErrorCode		   := 0;
+		DoneTimeOut(IN := FALSE, PT := TimeOut);
+		fbArgsFormat(pFormatString := ADR(ArgsFormat),
+					 arg1		   := F_STRING(ThisFBPath),
+					 arg2		   := F_DINT(THIS^.nLanguageID),
+					 arg3		   := F_INT(THIS^.eDateAndTimeFormat),
+					 pDstString	   := ADR(ReadTc3Events2Args),
+					 nDstSize	   := SIZEOF(ReadTc3Events2Args));
+
+		IF fbArgsFormat.bError THEN
+			bExec			 := FALSE;
+			ReadLoggedEvents := FALSE;
+			hrErrorCode		 := TO_DINT(fbArgsFormat.nErrId);
+			RETURN;
+		END_IF
+
+		CallReadTc3Events2.START := TRUE;
+		Step					 := 10;
+
+	10: //Wait for NT_StartProcess to finish
+		IF NOT CallReadTc3Events2.BUSY THEN
+			IF NOT CallReadTc3Events2.ERR THEN
+				Step := 15;
+			ELSE
+				hrErrorCode		 := TO_DINT(CallReadTc3Events2.ERRID);
+				ReadLoggedEvents := FALSE;
+				bExec			 := FALSE;
+				Step			 := 0;
+			END_IF
+
+			CallReadTc3Events2.START := FALSE;
+		END_IF
+
+	15: //Wait for ReadTc3Events2 to finish
+		DoneTimeOut(IN := TRUE);
+		IF ReadTc3Events2Done THEN
+			hrErrorCode		 := E_HRESULTAdsErr.HRESULT_ADS_NOERROR;
+			ReadLoggedEvents := TRUE;
+			bExec			 := FALSE;
+			Step			 := 0;
+		ELSIF DoneTimeOut.Q THEN
+			ReadLoggedEvents := FALSE;
+			hrErrorCode		 := E_HRESULTAdsErr.TIMEOUT;
+			bExec			 := FALSE;
+			Step			 := 0;
+		END_IF
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

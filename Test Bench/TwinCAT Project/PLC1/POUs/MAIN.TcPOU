@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{8e279f0e-7f0a-4414-b3f0-94b367b48d58}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	// FB_ReadTc3Events
+	fbReadTc3Events			 : FB_ReadTc3Events2;
+	bReadActiveEvents		 : BOOL								 := TRUE;
+	nLanguage				 : DINT								 := 1033;
+	eDateAndTimeFormat		 : Tc2_Utilities.E_DateAndTimeFormat := Tc2_Utilities.E_DateAndTimeFormat.en_US;
+	bClearDisplay			 : BOOL;
+	eSeverityMinActiveEvents : TcEventSeverity;
+	bError					 : BOOL;
+	hr						 : HRESULT;
+	numOfEvents				 : UDINT;
+	ReadLoggedEvents		 : BOOL;
+	Loaded					 : BOOL;
+	Result					 : HRESULT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Call fbReadTc3Events
+fbReadTc3Events(bReadEvents		   := bReadActiveEvents,
+				nLanguageID		   := nLanguage,
+				eDateAndTimeFormat := eDateAndTimeFormat,
+				bClearTable		   := bClearDisplay,
+				eMinSeverity	   := eSeverityMinActiveEvents,
+				aEvents			   =>,
+				nNumberOfEvents	   => numOfEvents,
+				bError			   => bError,
+				hrErrorCode		   => hr,
+				bClearLoggedTable  := bClearDisplay,
+				LoggedEvents	   =>);
+bClearDisplay := FALSE;
+
+
+
+IF ReadLoggedEvents THEN
+	Loaded := fbReadTc3Events.ReadLoggedEvents(bExec := ReadLoggedEvents, hrErrorCode => Result);
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
